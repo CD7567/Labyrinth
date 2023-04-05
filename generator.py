@@ -4,6 +4,7 @@ from csv import writer
 from dataclasses import dataclass
 from collections import deque
 from random import choice
+from random import randint
 
 @dataclass
 class Cell:
@@ -12,13 +13,10 @@ class Cell:
     left: bool = 1
     right: bool = 1
     visited: bool = 0
-#    x: int
-#    y: int
-
-
+    type: int = 0
 
     def __str__(self):
-        return f'{self.top}{self.bottom}{self.left}{self.right}'
+        return f'{self.top}{self.bottom}{self.left}{self.right}{self.type}'
 
 def get_valid_neighbours(field: list[list[Cell]], coords: list[int]) -> list[(int, int)]:
     x_bound, y_bound = len(field), len(field[0])
@@ -38,14 +36,13 @@ def get_valid_neighbours(field: list[list[Cell]], coords: list[int]) -> list[(in
 
     return result
 
-def dfs_generate(width: int, height: int) -> list[list[Cell]]:
+def dfs_generate(width: int, height: int, initial_cell: tuple[int, int]) -> list[list[Cell]]:
     field = [
                 [
                     Cell() for i in range(width)
                 ] for j in range(height)
             ]
     
-    initial_cell = (0, 0)
     field[initial_cell[0]][initial_cell[1]].visited = 1
 
     path = deque()
@@ -81,13 +78,23 @@ def dfs_generate(width: int, height: int) -> list[list[Cell]]:
 
     return field
 
+initial_cell = (randint(0, int(sys.argv[1]) - 1), 0)
+field = dfs_generate(int(sys.argv[1]), int(sys.argv[2]), initial_cell)
 
-field = dfs_generate(int(sys.argv[1]), int(sys.argv[2]))
+finish_cell = initial_cell
+while finish_cell == initial_cell:
+    finish_cell = (randint(0, int(sys.argv[1]) - 1), randint(0, int(sys.argv[2]) - 1))
+
+field[initial_cell[0]][initial_cell[1]].type = 1
+field[initial_cell[0]][initial_cell[1]].top = 0
+field[finish_cell[0]][finish_cell[1]].type = 1
 
 os.makedirs(os.path.join(os.path.curdir, 'maps'), exist_ok = True)
 with open(os.path.join(os.path.curdir, 'maps', f'{sys.argv[3]}.csv'), 'w') as file:
     wr = writer(file)
     wr.writerow([sys.argv[1], sys.argv[2]])
+    wr.writerow(initial_cell)
+    wr.writerow(finish_cell)
 
     for row in zip(*field):
         wr.writerow(row)
