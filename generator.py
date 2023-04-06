@@ -18,7 +18,7 @@ class Cell:
     def __str__(self):
         return f'{self.top}{self.bottom}{self.left}{self.right}{self.type}'
 
-def get_valid_neighbours(field: list[list[Cell]], coords: list[int]) -> list[(int, int)]:
+def get_valid_neighbours(field: list[list[Cell]], coords: list[int]) -> tuple[list[(int, int)], (int, int), (int, int)]:
     x_bound, y_bound = len(field), len(field[0])
     result = []
 
@@ -43,10 +43,14 @@ def dfs_generate(width: int, height: int, initial_cell: tuple[int, int]) -> list
                 ] for j in range(height)
             ]
     
-    field[initial_cell[0]][initial_cell[1]].visited = 1
-
+    dead_ends = []
     path = deque()
+    met_end = 0
+
     path.append(initial_cell)
+    field[initial_cell[0]][initial_cell[1]].visited = 1
+    field[initial_cell[0]][initial_cell[1]].type = 1
+    field[initial_cell[0]][initial_cell[1]].top = 0
 
     while True:
         curr_cell = path[-1]
@@ -56,8 +60,12 @@ def dfs_generate(width: int, height: int, initial_cell: tuple[int, int]) -> list
             if (curr_cell == initial_cell):
                 break
             else:
+                if (not met_end):
+                    met_end = 1
+                    dead_ends.append(curr_cell)
                 path.pop()
         else:
+            met_end = 0
             next_cell = choice(neighbours)
 
             if (curr_cell[0] < next_cell[0]):
@@ -76,25 +84,20 @@ def dfs_generate(width: int, height: int, initial_cell: tuple[int, int]) -> list
             field[next_cell[0]][next_cell[1]].visited = 1
             path.append(next_cell)
 
-    return field
+    finish_cell = choice(dead_ends)
+    field[finish_cell[0]][finish_cell[1]].type = 2
+
+    return (field, initial_cell, finish_cell)
 
 initial_cell = (randint(0, int(sys.argv[1]) - 1), 0)
-field = dfs_generate(int(sys.argv[1]), int(sys.argv[2]), initial_cell)
-
-finish_cell = initial_cell
-while finish_cell == initial_cell:
-    finish_cell = (randint(0, int(sys.argv[1]) - 1), randint(0, int(sys.argv[2]) - 1))
-
-field[initial_cell[0]][initial_cell[1]].type = 1
-field[initial_cell[0]][initial_cell[1]].top = 0
-field[finish_cell[0]][finish_cell[1]].type = 1
+labyrinth = dfs_generate(int(sys.argv[1]), int(sys.argv[2]), initial_cell)
 
 os.makedirs(os.path.join(os.path.curdir, 'maps'), exist_ok = True)
 with open(os.path.join(os.path.curdir, 'maps', f'{sys.argv[3]}.csv'), 'w') as file:
     wr = writer(file)
     wr.writerow([sys.argv[1], sys.argv[2]])
-    wr.writerow(initial_cell)
-    wr.writerow(finish_cell)
+    wr.writerow(labyrinth[1])
+    wr.writerow(labyrinth[2])
 
-    for row in zip(*field):
+    for row in zip(*labyrinth[0]):
         wr.writerow(row)
