@@ -45,6 +45,7 @@ def dfs_generate(width: int, height: int, initial_cell: tuple[int, int]) -> list
     
     dead_ends = []
     path = deque()
+    met_end = 0
 
     path.append(initial_cell)
     field[initial_cell[0]][initial_cell[1]].visited = 1
@@ -59,9 +60,12 @@ def dfs_generate(width: int, height: int, initial_cell: tuple[int, int]) -> list
             if (curr_cell == initial_cell):
                 break
             else:
-                dead_ends.append(curr_cell)
+                if (not met_end):
+                    met_end = 1
+                    dead_ends.append(curr_cell)
                 path.pop()
         else:
+            met_end = 0
             next_cell = choice(neighbours)
 
             if (curr_cell[0] < next_cell[0]):
