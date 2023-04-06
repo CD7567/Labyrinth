@@ -92,8 +92,8 @@ def dfs_generate(width: int, height: int, initial_cell: tuple[int, int]) -> list
 initial_cell = (randint(0, int(sys.argv[1]) - 1), 0)
 labyrinth = dfs_generate(int(sys.argv[1]), int(sys.argv[2]), initial_cell)
 
-os.makedirs(os.path.join(os.path.curdir, 'maps'), exist_ok = True)
-with open(os.path.join(os.path.curdir, 'maps', f'{sys.argv[3]}.csv'), 'w') as file:
+os.makedirs(os.path.join(os.path.curdir, '..', 'maps'), exist_ok = True)
+with open(os.path.join(os.path.curdir, '..', 'maps', f'{sys.argv[3]}.csv'), 'w') as file:
     wr = writer(file)
     wr.writerow([sys.argv[1], sys.argv[2]])
     wr.writerow(labyrinth[1])

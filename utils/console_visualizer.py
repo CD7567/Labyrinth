@@ -12,7 +12,7 @@ cell_cross_delimiter = {'110011' : '╔', '110001': '║',
                         '001000' : '═', '001001' : '╗', '001010' : '═', '001011' : '╦',
                         '001100' : '╝', '001101' : '╣', '001110' : '╩', '001111' : '╬'}
 
-with open(os.path.join(os.path.curdir, 'maps', f'{sys.argv[1]}.csv'), 'r') as file:
+with open(os.path.join(os.path.curdir, '..', 'maps', f'{sys.argv[1]}.csv'), 'r') as file:
     r = list(reader(file))
     x_bound, y_bound = int(r[0][1]), int(r[0][0])
 
