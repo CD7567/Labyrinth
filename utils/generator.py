@@ -1,24 +1,37 @@
 import sys
 import os
 from csv import writer
+from csv import reader
 from dataclasses import dataclass
 from collections import deque
 from random import choice
 from random import randint
+from typing import TypeAlias
 
 @dataclass
 class Cell:
-    top: bool = 1
-    bottom: bool = 1
-    left: bool = 1
-    right: bool = 1
-    visited: bool = 0
+    top: int = 1
+    bottom: int = 1
+    left: int = 1
+    right: int = 1
+    visited: int = 0
     type: int = 0
 
     def __str__(self):
         return f'{self.top}{self.bottom}{self.left}{self.right}{self.type}'
 
-def get_valid_neighbours(field: list[list[Cell]], coords: list[int]) -> tuple[list[(int, int)], (int, int), (int, int)]:
+Coords: TypeAlias = tuple[int, int]
+Field: TypeAlias = list[list[Cell]]
+
+@dataclass
+class Labyrinth:
+    map: Field
+    width: int
+    height: int
+    initial_cell: Coords
+    finish_cell: Coords
+
+def get_valid_neighbours(field: Field, coords: Coords) -> list[Coords]:
     x_bound, y_bound = len(field), len(field[0])
     result = []
 
@@ -36,11 +49,11 @@ def get_valid_neighbours(field: list[list[Cell]], coords: list[int]) -> tuple[li
 
     return result
 
-def dfs_generate(width: int, height: int, initial_cell: tuple[int, int]) -> list[list[Cell]]:
+def dfs_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
     field = [
                 [
-                    Cell() for i in range(width)
-                ] for j in range(height)
+                    Cell() for i in range(height)
+                ] for j in range(width)
             ]
     
     dead_ends = []
@@ -87,17 +100,31 @@ def dfs_generate(width: int, height: int, initial_cell: tuple[int, int]) -> list
     finish_cell = choice(dead_ends)
     field[finish_cell[0]][finish_cell[1]].type = 2
 
-    return (field, initial_cell, finish_cell)
+    return Labyrinth(field, width, height, initial_cell, finish_cell)
 
-initial_cell = (randint(0, int(sys.argv[1]) - 1), 0)
-labyrinth = dfs_generate(int(sys.argv[1]), int(sys.argv[2]), initial_cell)
+def save_csv(labyrinth: Labyrinth, save_path: str, name: str):
+    os.makedirs(save_path, exist_ok = True)
+    with open(os.path.join(save_path, f'{name}.csv'), 'w') as file:
+        wr = writer(file)
+        wr.writerow([labyrinth.width, labyrinth.height])
+        wr.writerow(labyrinth.initial_cell)
+        wr.writerow(labyrinth.finish_cell)
 
-os.makedirs(os.path.join(os.path.curdir, 'maps'), exist_ok = True)
-with open(os.path.join(os.path.curdir, 'maps', f'{sys.argv[3]}.csv'), 'w') as file:
-    wr = writer(file)
-    wr.writerow([sys.argv[1], sys.argv[2]])
-    wr.writerow(labyrinth[1])
-    wr.writerow(labyrinth[2])
+        for row in zip(*labyrinth.map):
+            wr.writerow(row)
 
-    for row in zip(*labyrinth[0]):
-        wr.writerow(row)
+def load_csv(load_path: str, name: str) -> Labyrinth:
+    with open(os.path.join(load_path, f'{name}.csv'), 'r') as file:
+        r = list(reader(file))
+        labyrinth = Labyrinth([], int(r[0][0]), int(r[0][1]), (int(r[1][0]), int(r[1][1])), (int(r[2][0]), int(r[2][1])))
+
+        for column in zip(*r[3:]):
+            labyrinth.map.append([Cell(int(i[0]), int(i[1]), int(i[2]), int(i[3]), 0, int(i[4])) for i in column])
+
+        return labyrinth
+
+if __name__ == '__main__':
+    initial_cell = (randint(0, int(sys.argv[1]) - 1), 0)
+    labyrinth = dfs_generate(int(sys.argv[1]), int(sys.argv[2]), initial_cell)
+
+    save_csv(labyrinth, os.path.join(os.path.dirname(__file__), '..', 'maps'), sys.argv[3])
