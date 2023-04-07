@@ -1,5 +1,6 @@
 import sys
 import os
+from generator import *
 from csv import reader
 
 cell_filler = {'0' : ' ', '1' : ' ', '2' : '¤'}
@@ -12,55 +13,55 @@ cell_cross_delimiter = {'110011' : '╔', '110001': '║',
                         '001000' : '═', '001001' : '╗', '001010' : '═', '001011' : '╦',
                         '001100' : '╝', '001101' : '╣', '001110' : '╩', '001111' : '╬'}
 
-with open(os.path.join(os.path.curdir, '..', 'maps', f'{sys.argv[1]}.csv'), 'r') as file:
-    r = list(reader(file))
-    x_bound, y_bound = int(r[0][1]), int(r[0][0])
+def print_labyrinth(labyrinth: Labyrinth):
+    print(f'Labyrinth size: {labyrinth.width}x{labyrinth.height}')
+    print(f'Initial cell: {labyrinth.initial_cell}')
+    print(f'Finish cell: {labyrinth.finish_cell}')
 
-    print(f'Labyrinth size: {x_bound}x{y_bound}')
-    print(f'Initial cell: ({int(r[1][0])}, {int(r[1][1])})')
-    print(f'Finish cell: ({int(r[2][0])}, {int(r[2][1])})')
-
-    print('\n')
-
-    for j in range(x_bound):
-        print(' ', '↓' if r[3][j][4] == '1' else ' ', sep = '', end = '')
+    for j in range(labyrinth.width):
+        print(' ', '↓' if labyrinth.map[j][0].type == 1 else ' ', sep = '', end = '')
     print(' ')
 
-    for i in range(3, y_bound + 3):
-        if (i == 3):
-            for j in range(x_bound):
+    for i in range(labyrinth.height):
+        if (i == 0):
+            for j in range(labyrinth.width):
                 if (j == 0):
-                    print(cell_cross_delimiter['1100' + r[i][j][0] + r[i][j][2]],
-                          '═' if r[i][j][0] == '1' else ' ',
+                    print(cell_cross_delimiter['1100' + str(labyrinth.map[j][i].top) + str(labyrinth.map[j][i].left)],
+                          '═' if labyrinth.map[j][i].top else ' ',
                           sep = '', end = '')
                 else:
-                    print(cell_cross_delimiter['10' + r[i][j - 1][0] + '0' + r[i][j][0] + r[i][j][2]],
-                          '═' if r[i][j][0] == '1' else ' ',
+                    print(cell_cross_delimiter['10' + str(labyrinth.map[j - 1][i].top) + '0' + str(labyrinth.map[j][i].top) + str(labyrinth.map[j][i].left)],
+                          '═' if labyrinth.map[j][i].top else ' ',
                           sep = '', end = '')
                     
-            print('╗' if r[i][-1][0] == '1' else '║')
+            print('╗' if labyrinth.map[-1][i].top else '║')
 
         else:
-            for j in range(x_bound):
+            for j in range(labyrinth.width):
                 if (j == 0):
-                    print(cell_cross_delimiter['010' + r[i - 1][j][2] + r[i][j][0] + r[i][j][2]],
-                          '═' if r[i][j][0] == '1' else ' ',
+                    print(cell_cross_delimiter['010' + str(labyrinth.map[j][i - 1].left) + str(labyrinth.map[j][i].top) + str(labyrinth.map[j][i].left)],
+                          '═' if labyrinth.map[j][i].top else ' ',
                           sep = '', end = '')
                 else:
-                    print(cell_cross_delimiter['00' + r[i][j - 1][0] + r[i - 1][j][2] + r[i][j][0] + r[i][j][2]],
-                          '═' if r[i][j][0] == '1' else ' ',
+                    print(cell_cross_delimiter['00' + str(labyrinth.map[j - 1][i].top) + str(labyrinth.map[j][i - 1].left) + str(labyrinth.map[j][i].top) + str(labyrinth.map[j][i].left)],
+                          '═' if labyrinth.map[j][i].top else ' ',
                           sep = '', end = '')
                     
-            print('╣' if r[i][-1][0] == '1' else '║')
+            print('╣' if labyrinth.map[-1][i].top else '║')
 
-        for j in range(x_bound):
-            print('║' if r[i][j][2] == '1' else ' ',
-                  cell_filler[r[i][j][4]],
+        for j in range(labyrinth.width):
+            print('║' if labyrinth.map[j][i].left else ' ',
+                  cell_filler[str(labyrinth.map[j][i].type)],
                   sep = '', end = '')
         print('║')
 
-    for j in range(x_bound):
-        print('╚' if j == 0 else ('╩' if r[-1][j][2] == '1' else '═'),
+    for j in range(labyrinth.width):
+        print('╚' if j == 0 else ('╩' if labyrinth.map[j][-1].left else '═'),
               '═',
               sep = '', end = '')
     print('╝')
+
+if __name__ == '__main__':
+    labyrinth = load_csv(os.path.join(os.path.dirname(__file__), '..', 'maps'), sys.argv[1])
+
+    print_labyrinth(labyrinth)
