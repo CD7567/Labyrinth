@@ -1,7 +1,7 @@
 import sys
 import os
-from generator import *
-from csv import reader
+from .generator import Labyrinth
+from .generator import load_csv
 
 cell_filler = {'0' : ' ', '1' : ' ', '2' : '¤'}
 cell_cross_delimiter = {'110011' : '╔', '110001': '║',
@@ -62,6 +62,6 @@ def print_labyrinth(labyrinth: Labyrinth):
     print('╝')
 
 if __name__ == '__main__':
-    labyrinth = load_csv(os.path.join(os.path.dirname(__file__), '..', 'maps'), sys.argv[1])
+    lab = load_csv(os.path.join(os.path.dirname(__file__), '..', 'maps'), sys.argv[1])
 
-    print_labyrinth(labyrinth)
+    print_labyrinth(lab)
