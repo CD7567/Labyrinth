@@ -1,9 +1,6 @@
-import sys
-import os
 from .generator import Labyrinth
-from .generator import load_csv
 
-cell_filler = {'0' : ' ', '1' : ' ', '2' : '¤'}
+cell_filler = {-1: '*', 0 : ' ', 1 : ' ', 2 : '¤'}
 cell_cross_delimiter = {'110011' : '╔', '110001': '║',
                         '100010' : '═', '101000' : '═', '100011' : '╔', '101001' : '╗',
                         '101010' : '═', '101011' : '╦',
@@ -20,7 +17,7 @@ def print_labyrinth(labyrinth: Labyrinth):
     print(f'Algo: {labyrinth.algo}', '\n')
 
     for j in range(labyrinth.width):
-        print(' ', '↓' if labyrinth.field[j][0].type == 1 else ' ', sep = '', end = '')
+        print(' ', '↓' if (j, 0) == labyrinth.initial_cell else ' ', sep = '', end = '')
     print(' ')
 
     for i in range(labyrinth.height):
@@ -52,7 +49,7 @@ def print_labyrinth(labyrinth: Labyrinth):
 
         for j in range(labyrinth.width):
             print('║' if labyrinth.field[j][i].left else ' ',
-                  cell_filler[str(labyrinth.field[j][i].type)],
+                  cell_filler[labyrinth.field[j][i].type],
                   sep = '', end = '')
         print('║')
 
@@ -61,8 +58,3 @@ def print_labyrinth(labyrinth: Labyrinth):
               '═',
               sep = '', end = '')
     print('╝')
-
-if __name__ == '__main__':
-    lab = load_csv(os.path.join(os.path.dirname(__file__), '..', 'maps'), sys.argv[1])
-
-    print_labyrinth(lab)
