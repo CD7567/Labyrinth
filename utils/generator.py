@@ -4,7 +4,6 @@ from csv import writer
 from csv import reader
 from dataclasses import dataclass
 from collections import deque
-from random import choice
 from random import sample
 from random import randint
 from typing import TypeAlias
@@ -86,7 +85,7 @@ def dfs_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
                 break
         else:
             met_end = 0
-            next_cell = choice(neighbours)
+            next_cell = sample(neighbours, 1)[0]
 
             if curr_cell[0] < next_cell[0]:
                 field[curr_cell[0]][curr_cell[1]].right = 0
@@ -104,7 +103,7 @@ def dfs_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
             field[next_cell[0]][next_cell[1]].visited = 1
             path.append(next_cell)
 
-    finish_cell = choice(dead_ends)
+    finish_cell = sample(dead_ends, 1)[0]
     field[finish_cell[0]][finish_cell[1]].type = 2
 
     return Labyrinth('dfs', field, width, height, initial_cell, finish_cell)
@@ -163,7 +162,7 @@ def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
             neighbours = get_valid_neighbours(field, curr_cell, failed_cells)
 
             while len(neighbours) > 0 and next_cell in path:
-                next_cell = choice(neighbours)
+                next_cell = sample(neighbours, 1)[0]
                 neighbours.remove(next_cell)
 
             if len(neighbours) == 0 and next_cell in path:
@@ -173,6 +172,9 @@ def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
 
                 if field[next_cell[0]][next_cell[1]].visited == 1:
                     break
+        
+        if path[-1] in dead_ends:
+            dead_ends.remove(path[-1])
 
         while len(path) > 1:
             curr_cell = path.popleft()
@@ -193,7 +195,7 @@ def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
                 field[curr_cell[0]][curr_cell[1]].top = 0
                 field[next_cell[0]][next_cell[1]].bottom = 0
 
-    finish_cell = choice(dead_ends)
+    finish_cell = sample(dead_ends, 1)[0]
     field[finish_cell[0]][finish_cell[1]].type = 2
     return Labyrinth('wilson', field, width, height, initial_cell, finish_cell)
 
