@@ -1,11 +1,10 @@
-import sys
 import os
+import copy
 from csv import writer
 from csv import reader
 from dataclasses import dataclass
 from collections import deque
 from random import sample
-from random import randint
 from typing import TypeAlias
 
 @dataclass
@@ -199,6 +198,64 @@ def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
     field[finish_cell[0]][finish_cell[1]].type = 2
     return Labyrinth('wilson', field, width, height, initial_cell, finish_cell)
 
+def solve_labyrinth(labyrinth: Labyrinth) -> Field:
+    '''Takes labyrinth and solves it via DFS'''
+
+    def get_valid_neighbours(field: Field, coords: Coords) -> list[Coords]:
+        '''Takes field and one of its cells, returns valid non-visited neighbours'''
+        x_bound, y_bound = len(field), len(field[0])
+        result = []
+
+        if coords[1] > 0 and not field[coords[0]][coords[1] - 1].visited and not field[coords[0]][coords[1]].top:
+            result.append((coords[0], coords[1] - 1))
+
+        if coords[1] < y_bound - 1 and not field[coords[0]][coords[1] + 1].visited and not field[coords[0]][coords[1]].bottom:
+            result.append((coords[0], coords[1] + 1))
+
+        if coords[0] > 0 and not field[coords[0] - 1][coords[1]].visited and not field[coords[0]][coords[1]].left:
+            result.append((coords[0] - 1, coords[1]))
+
+        if coords[0] < x_bound - 1 and not field[coords[0] + 1][coords[1]].visited and not field[coords[0]][coords[1]].right:
+            result.append((coords[0] + 1, coords[1]))
+
+        return result
+
+    field = copy.deepcopy(labyrinth.field)
+    initial_cell = labyrinth.initial_cell
+
+    for i in range(len(field)):
+        for j in range(len(field[0])):
+            field[i][j].visited = 0
+
+    path = deque()
+
+    path.append(initial_cell)
+    field[initial_cell[0]][initial_cell[1]].visited = 1
+
+    while True:
+        curr_cell = path[-1]
+        neighbours = get_valid_neighbours(field, curr_cell)
+
+        if len(neighbours) == 0:
+            if curr_cell != initial_cell:
+                path.pop()
+            else:
+                break
+        else:
+            next_cell = sample(neighbours, 1)[0]
+
+            field[next_cell[0]][next_cell[1]].visited = 1
+
+            if (next_cell == labyrinth.finish_cell):
+                break
+
+            path.append(next_cell)
+
+    for cell in path:
+        field[cell[0]][cell[1]].type = -1
+
+    return field
+    
 def save_csv(labyrinth: Labyrinth, save_path: str, name: str):
     '''Saves labyrinth in csv file'''
     os.makedirs(save_path, exist_ok = True)
@@ -232,9 +289,3 @@ def load_csv(load_path: str, name: str) -> Labyrinth:
             labyrinth.field.append([Cell(int(i[0]), int(i[1]), int(i[2]), int(i[3]), 0, int(i[4])) for i in column])
 
         return labyrinth
-
-if __name__ == '__main__':
-    init_cell = (randint(0, int(sys.argv[1]) - 1), 0)
-    lab = dfs_generate(int(sys.argv[1]), int(sys.argv[2]), init_cell)
-
-    save_csv(lab, os.path.join(os.path.dirname(__file__), '..', 'maps'), sys.argv[3])
