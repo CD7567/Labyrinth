@@ -110,21 +110,21 @@ def dfs_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
 def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
     '''Takes field dimensions and generates labyrinth via Wilson algorithm'''
 
-    def get_valid_neighbours(field: Field, coords: Coords, failed_cells: list[Coords]) -> list[Coords]:
+    def get_valid_neighbours(field: Field, coords: Coords) -> list[Coords]:
         '''Takes field and one of its cells, returns valid neighbours'''
         x_bound, y_bound = len(field), len(field[0])
         result = []
 
-        if coords[1] > 0 and (coords[0], coords[1] - 1) not in failed_cells:
+        if coords[1] > 0 and (coords[0], coords[1] - 1):
             result.append((coords[0], coords[1] - 1))
 
-        if coords[1] < y_bound - 1 and (coords[0], coords[1] + 1) not in failed_cells:
+        if coords[1] < y_bound - 1 and (coords[0], coords[1] + 1):
             result.append((coords[0], coords[1] + 1))
 
-        if coords[0] > 0 and (coords[0] - 1, coords[1]) not in failed_cells:
+        if coords[0] > 0 and (coords[0] - 1, coords[1]):
             result.append((coords[0] - 1, coords[1]))
 
-        if coords[0] < x_bound - 1 and (coords[0] + 1, coords[1]) not in failed_cells:
+        if coords[0] < x_bound - 1 and (coords[0] + 1, coords[1]):
             result.append((coords[0] + 1, coords[1]))
 
         return result
@@ -147,30 +147,25 @@ def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
     while len(unvisited_set) > 0:
         base_cell = sample(unvisited_set, 1)[0]
         path = deque()
-        failed_cells = []
 
         dead_ends.append(base_cell)
         path.append(base_cell)
 
         while True:
-            if (len(path) == 0):
-                break
-
             curr_cell = path[-1]
             next_cell = curr_cell
-            neighbours = get_valid_neighbours(field, curr_cell, failed_cells)
+            neighbours = get_valid_neighbours(field, curr_cell)
 
-            while len(neighbours) > 0 and next_cell in path:
-                next_cell = sample(neighbours, 1)[0]
-                neighbours.remove(next_cell)
+            next_cell = sample(neighbours, 1)[0]
 
-            if len(neighbours) == 0 and next_cell in path:
-                failed_cells.append(path.pop())
+            if next_cell in path:
+                while path[-1] != next_cell:
+                    path.pop()
             else:
                 path.append(next_cell)
 
-                if field[next_cell[0]][next_cell[1]].visited == 1:
-                    break
+            if field[next_cell[0]][next_cell[1]].visited == 1:
+                break
         
         if path[-1] in dead_ends:
             dead_ends.remove(path[-1])
