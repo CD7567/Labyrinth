@@ -28,6 +28,7 @@ Field: TypeAlias = list[list[Cell]]
 @dataclass
 class Labyrinth:
     '''Class representing labyrinth'''
+    algo: str
     field: Field
     width: int
     height: int
@@ -106,7 +107,7 @@ def dfs_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
     finish_cell = choice(dead_ends)
     field[finish_cell[0]][finish_cell[1]].type = 2
 
-    return Labyrinth(field, width, height, initial_cell, finish_cell)
+    return Labyrinth('dfs', field, width, height, initial_cell, finish_cell)
 
 def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
     '''Takes field dimensions and generates labyrinth via Wilson algorithm'''
@@ -194,7 +195,7 @@ def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
 
     finish_cell = choice(dead_ends)
     field[finish_cell[0]][finish_cell[1]].type = 2
-    return Labyrinth(field, width, height, initial_cell, finish_cell)
+    return Labyrinth('wilson', field, width, height, initial_cell, finish_cell)
 
 def save_csv(labyrinth: Labyrinth, save_path: str, name: str):
     '''Saves labyrinth in csv file'''
@@ -204,17 +205,28 @@ def save_csv(labyrinth: Labyrinth, save_path: str, name: str):
         file_writer.writerow([labyrinth.width, labyrinth.height])
         file_writer.writerow(labyrinth.initial_cell)
         file_writer.writerow(labyrinth.finish_cell)
+        file_writer.writerow(labyrinth.algo)
+
 
         for row in zip(*labyrinth.field):
             file_writer.writerow(row)
 
 def load_csv(load_path: str, name: str) -> Labyrinth:
     '''Loads labyrinth from csv file'''
+
+    def join_str(string: list[chr]) -> str:
+        result = ''
+
+        for i in string:
+            result += i
+
+        return result
+
     with open(os.path.join(load_path, f'{name}.csv'), 'r', encoding = 'utf-8') as file:
         file_reader = list(reader(file))
-        labyrinth = Labyrinth([], int(file_reader[0][0]), int(file_reader[0][1]), (int(file_reader[1][0]), int(file_reader[1][1])), (int(file_reader[2][0]), int(file_reader[2][1])))
+        labyrinth = Labyrinth(join_str(file_reader[3]), [], int(file_reader[0][0]), int(file_reader[0][1]), (int(file_reader[1][0]), int(file_reader[1][1])), (int(file_reader[2][0]), int(file_reader[2][1])))
 
-        for column in zip(*file_reader[3:]):
+        for column in zip(*file_reader[4:]):
             labyrinth.field.append([Cell(int(i[0]), int(i[1]), int(i[2]), int(i[3]), 0, int(i[4])) for i in column])
 
         return labyrinth

@@ -17,46 +17,47 @@ def print_labyrinth(labyrinth: Labyrinth):
     print(f'Labyrinth size: {labyrinth.width}x{labyrinth.height}')
     print(f'Initial cell: {labyrinth.initial_cell}')
     print(f'Finish cell: {labyrinth.finish_cell}')
+    print(f'Algo: {labyrinth.algo}', '\n')
 
     for j in range(labyrinth.width):
-        print(' ', '↓' if labyrinth.map[j][0].type == 1 else ' ', sep = '', end = '')
+        print(' ', '↓' if labyrinth.field[j][0].type == 1 else ' ', sep = '', end = '')
     print(' ')
 
     for i in range(labyrinth.height):
         if (i == 0):
             for j in range(labyrinth.width):
                 if (j == 0):
-                    print(cell_cross_delimiter['1100' + str(labyrinth.map[j][i].top) + str(labyrinth.map[j][i].left)],
-                          '═' if labyrinth.map[j][i].top else ' ',
+                    print(cell_cross_delimiter['1100' + str(labyrinth.field[j][i].top) + str(labyrinth.field[j][i].left)],
+                          '═' if labyrinth.field[j][i].top else ' ',
                           sep = '', end = '')
                 else:
-                    print(cell_cross_delimiter['10' + str(labyrinth.map[j - 1][i].top) + '0' + str(labyrinth.map[j][i].top) + str(labyrinth.map[j][i].left)],
-                          '═' if labyrinth.map[j][i].top else ' ',
+                    print(cell_cross_delimiter['10' + str(labyrinth.field[j - 1][i].top) + '0' + str(labyrinth.field[j][i].top) + str(labyrinth.field[j][i].left)],
+                          '═' if labyrinth.field[j][i].top else ' ',
                           sep = '', end = '')
                     
-            print('╗' if labyrinth.map[-1][i].top else '║')
+            print('╗' if labyrinth.field[-1][i].top else '║')
 
         else:
             for j in range(labyrinth.width):
                 if (j == 0):
-                    print(cell_cross_delimiter['010' + str(labyrinth.map[j][i - 1].left) + str(labyrinth.map[j][i].top) + str(labyrinth.map[j][i].left)],
-                          '═' if labyrinth.map[j][i].top else ' ',
+                    print(cell_cross_delimiter['010' + str(labyrinth.field[j][i - 1].left) + str(labyrinth.field[j][i].top) + str(labyrinth.field[j][i].left)],
+                          '═' if labyrinth.field[j][i].top else ' ',
                           sep = '', end = '')
                 else:
-                    print(cell_cross_delimiter['00' + str(labyrinth.map[j - 1][i].top) + str(labyrinth.map[j][i - 1].left) + str(labyrinth.map[j][i].top) + str(labyrinth.map[j][i].left)],
-                          '═' if labyrinth.map[j][i].top else ' ',
+                    print(cell_cross_delimiter['00' + str(labyrinth.field[j - 1][i].top) + str(labyrinth.field[j][i - 1].left) + str(labyrinth.field[j][i].top) + str(labyrinth.field[j][i].left)],
+                          '═' if labyrinth.field[j][i].top else ' ',
                           sep = '', end = '')
                     
-            print('╣' if labyrinth.map[-1][i].top else '║')
+            print('╣' if labyrinth.field[-1][i].top else '║')
 
         for j in range(labyrinth.width):
-            print('║' if labyrinth.map[j][i].left else ' ',
-                  cell_filler[str(labyrinth.map[j][i].type)],
+            print('║' if labyrinth.field[j][i].left else ' ',
+                  cell_filler[str(labyrinth.field[j][i].type)],
                   sep = '', end = '')
         print('║')
 
     for j in range(labyrinth.width):
-        print('╚' if j == 0 else ('╩' if labyrinth.map[j][-1].left else '═'),
+        print('╚' if j == 0 else ('╩' if labyrinth.field[j][-1].left else '═'),
               '═',
               sep = '', end = '')
     print('╝')
