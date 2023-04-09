@@ -5,6 +5,7 @@ from csv import reader
 from dataclasses import dataclass
 from collections import deque
 from random import sample
+from random import randint
 from typing import TypeAlias
 
 @dataclass
@@ -30,10 +31,10 @@ class Labyrinth:
     field: Field
     width: int
     height: int
-    initial_cell: Coords
+    start_cell: Coords
     finish_cell: Coords
 
-def dfs_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
+def dfs_generate(width: int, height: int) -> Labyrinth:
     '''Takes field dimensions and generates labyrinth via DFS'''
 
     def get_valid_neighbours(field: Field, coords: Coords) -> list[Coords]:
@@ -60,6 +61,8 @@ def dfs_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
                     Cell() for i in range(height)
                 ] for j in range(width)
             ]
+    
+    initial_cell = (randint(0, width - 1), 0)
 
     dead_ends = []
     path = deque()
@@ -107,24 +110,24 @@ def dfs_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
 
     return Labyrinth('dfs', field, width, height, initial_cell, finish_cell)
 
-def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
-    '''Takes field dimensions and generates labyrinth via Wilson algorithm'''
+def wilson_generate(width: int, height: int) -> Labyrinth:
+    '''Takes field dimensions and generates labyrinth via Wilson's algorithm'''
 
-    def get_valid_neighbours(field: Field, coords: Coords, failed_cells: list[Coords]) -> list[Coords]:
+    def get_valid_neighbours(field: Field, coords: Coords) -> list[Coords]:
         '''Takes field and one of its cells, returns valid neighbours'''
         x_bound, y_bound = len(field), len(field[0])
         result = []
 
-        if coords[1] > 0 and (coords[0], coords[1] - 1) not in failed_cells:
+        if coords[1] > 0 and (coords[0], coords[1] - 1):
             result.append((coords[0], coords[1] - 1))
 
-        if coords[1] < y_bound - 1 and (coords[0], coords[1] + 1) not in failed_cells:
+        if coords[1] < y_bound - 1 and (coords[0], coords[1] + 1):
             result.append((coords[0], coords[1] + 1))
 
-        if coords[0] > 0 and (coords[0] - 1, coords[1]) not in failed_cells:
+        if coords[0] > 0 and (coords[0] - 1, coords[1]):
             result.append((coords[0] - 1, coords[1]))
 
-        if coords[0] < x_bound - 1 and (coords[0] + 1, coords[1]) not in failed_cells:
+        if coords[0] < x_bound - 1 and (coords[0] + 1, coords[1]):
             result.append((coords[0] + 1, coords[1]))
 
         return result
@@ -134,6 +137,8 @@ def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
                     Cell() for i in range(height)
                 ] for j in range(width)
             ]
+
+    initial_cell = (randint(0, width - 1), 0)
 
     field[initial_cell[0]][initial_cell[1]].visited = 1
     field[initial_cell[0]][initial_cell[1]].type = 1
@@ -147,30 +152,25 @@ def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
     while len(unvisited_set) > 0:
         base_cell = sample(unvisited_set, 1)[0]
         path = deque()
-        failed_cells = []
 
         dead_ends.append(base_cell)
         path.append(base_cell)
 
         while True:
-            if (len(path) == 0):
-                break
-
             curr_cell = path[-1]
             next_cell = curr_cell
-            neighbours = get_valid_neighbours(field, curr_cell, failed_cells)
+            neighbours = get_valid_neighbours(field, curr_cell)
 
-            while len(neighbours) > 0 and next_cell in path:
-                next_cell = sample(neighbours, 1)[0]
-                neighbours.remove(next_cell)
+            next_cell = sample(neighbours, 1)[0]
 
-            if len(neighbours) == 0 and next_cell in path:
-                failed_cells.append(path.pop())
+            if next_cell in path:
+                while path[-1] != next_cell:
+                    path.pop()
             else:
                 path.append(next_cell)
 
-                if field[next_cell[0]][next_cell[1]].visited == 1:
-                    break
+            if field[next_cell[0]][next_cell[1]].visited == 1:
+                break
         
         if path[-1] in dead_ends:
             dead_ends.remove(path[-1])
@@ -198,6 +198,93 @@ def wilson_generate(width: int, height: int, initial_cell: Coords) -> Labyrinth:
     field[finish_cell[0]][finish_cell[1]].type = 2
     return Labyrinth('wilson', field, width, height, initial_cell, finish_cell)
 
+def prim_generate(width: int , height: int) -> Labyrinth:
+    '''
+        Takes field dimensions and generates labyrinth via Prim's algorithm
+        Edge weights are calculated by random height map
+    '''
+
+    def get_valid_neighbours(field: Field, coords: Coords) -> list[Coords]:
+        '''Takes field and one of its cells, returns valid non-visited neighbours'''
+        x_bound, y_bound = len(field), len(field[0])
+        result = []
+
+        if coords[1] > 0 and not field[coords[0]][coords[1] - 1].visited:
+            result.append((coords[0], coords[1] - 1))
+
+        if coords[1] < y_bound - 1 and not field[coords[0]][coords[1] + 1].visited:
+            result.append((coords[0], coords[1] + 1))
+
+        if coords[0] > 0 and not field[coords[0] - 1][coords[1]].visited:
+            result.append((coords[0] - 1, coords[1]))
+
+        if coords[0] < x_bound - 1 and not field[coords[0] + 1][coords[1]].visited:
+            result.append((coords[0] + 1, coords[1]))
+
+        return result
+
+    field = [
+                [
+                    Cell() for j in range(height)
+                ] for i in range(width)
+            ]
+
+    max_weight = width * height
+    height_map = [[randint(1, max_weight) for j in range(height)] for i in range (width)]
+
+    initial_cell = (randint(1, width - 1), randint(0, height - 1))
+    field[initial_cell[0]][initial_cell[1]].visited = 1
+
+    possible_paths = []
+    dead_ends = []
+
+    for vertex in get_valid_neighbours(field, initial_cell):
+        possible_paths.append((abs(height_map[vertex[0]][vertex[1]] - height_map[initial_cell[0]][initial_cell[1]]), initial_cell, vertex))
+
+    while len(possible_paths) > 0:
+        path = min(possible_paths)
+        curr_cell = path[1]
+        next_cell = path[2]
+
+        field[next_cell[0]][next_cell[1]].visited = 1
+        neighbours = get_valid_neighbours(field, next_cell)
+
+
+        if curr_cell[0] < next_cell[0]:
+            field[curr_cell[0]][curr_cell[1]].right = 0
+            field[next_cell[0]][next_cell[1]].left = 0
+        elif curr_cell[0] > next_cell[0]:
+            field[curr_cell[0]][curr_cell[1]].left = 0
+            field[next_cell[0]][next_cell[1]].right = 0
+        elif curr_cell[1] < next_cell[1]:
+            field[curr_cell[0]][curr_cell[1]].bottom = 0
+            field[next_cell[0]][next_cell[1]].top = 0
+        else:
+            field[curr_cell[0]][curr_cell[1]].top = 0
+            field[next_cell[0]][next_cell[1]].bottom = 0
+
+
+        for vertex in neighbours:
+            possible_paths.append((abs(height_map[vertex[0]][vertex[1]] - height_map[next_cell[0]][next_cell[1]]), next_cell, vertex))
+
+        if len(neighbours) == 0:
+            dead_ends.append(next_cell)
+
+        possible_paths = [path for path in possible_paths if field[path[2][0]][path[2][1]].visited == 0]
+
+    start_cell = (randint(0, width - 1), 0)
+
+    field[start_cell[0]][start_cell[1]].top = 0
+    field[start_cell[0]][start_cell[1]].type = 1
+
+    if start_cell in dead_ends:
+        dead_ends.remove(start_cell)
+
+    finish_cell = sample(dead_ends, 1)[0]
+    field[finish_cell[0]][finish_cell[1]].type = 2
+
+    return Labyrinth('prim', field, width, height, start_cell, finish_cell)
+
 def solve_labyrinth(labyrinth: Labyrinth) -> Field:
     '''Takes labyrinth and solves it via DFS'''
 
@@ -221,7 +308,7 @@ def solve_labyrinth(labyrinth: Labyrinth) -> Field:
         return result
 
     field = copy.deepcopy(labyrinth.field)
-    initial_cell = labyrinth.initial_cell
+    start_cell = labyrinth.start_cell
 
     for i in range(len(field)):
         for j in range(len(field[0])):
@@ -229,15 +316,15 @@ def solve_labyrinth(labyrinth: Labyrinth) -> Field:
 
     path = deque()
 
-    path.append(initial_cell)
-    field[initial_cell[0]][initial_cell[1]].visited = 1
+    path.append(start_cell)
+    field[start_cell[0]][start_cell[1]].visited = 1
 
     while True:
         curr_cell = path[-1]
         neighbours = get_valid_neighbours(field, curr_cell)
 
         if len(neighbours) == 0:
-            if curr_cell != initial_cell:
+            if curr_cell != start_cell:
                 path.pop()
             else:
                 break
@@ -262,7 +349,7 @@ def save_csv(labyrinth: Labyrinth, save_path: str, name: str):
     with open(os.path.join(save_path, f'{name}.csv'), 'w', encoding = 'utf-8') as file:
         file_writer = writer(file)
         file_writer.writerow([labyrinth.width, labyrinth.height])
-        file_writer.writerow(labyrinth.initial_cell)
+        file_writer.writerow(labyrinth.start_cell)
         file_writer.writerow(labyrinth.finish_cell)
         file_writer.writerow(labyrinth.algo)
 

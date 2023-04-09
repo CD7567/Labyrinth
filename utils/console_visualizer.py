@@ -12,12 +12,12 @@ cell_cross_delimiter = {'110011' : '╔', '110001': '║',
 
 def print_labyrinth(labyrinth: Labyrinth):
     print(f'Labyrinth size: {labyrinth.width}x{labyrinth.height}')
-    print(f'Initial cell: {labyrinth.initial_cell}')
+    print(f'Start cell: {labyrinth.start_cell}')
     print(f'Finish cell: {labyrinth.finish_cell}')
     print(f'Algo: {labyrinth.algo}', '\n')
 
     for j in range(labyrinth.width):
-        print(' ', '↓' if (j, 0) == labyrinth.initial_cell else ' ', sep = '', end = '')
+        print(' ', '↓' if (j, 0) == labyrinth.start_cell else ' ', sep = '', end = '')
     print(' ')
 
     for i in range(labyrinth.height):
