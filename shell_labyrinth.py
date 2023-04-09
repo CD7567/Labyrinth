@@ -1,18 +1,19 @@
 import os
 import re
+import traceback
 from datetime import datetime
-from random import randint
 from cmd import Cmd
 
 from utils.generator import Labyrinth
 from utils.generator import dfs_generate
 from utils.generator import wilson_generate
+from utils.generator import prim_generate
 from utils.generator import solve_labyrinth
 from utils.generator import save_csv
 from utils.generator import load_csv
 from utils.console_visualizer import print_labyrinth
 
-generate = {'dfs' : dfs_generate, 'wilson' : wilson_generate}
+generate = {'dfs' : dfs_generate, 'wilson' : wilson_generate, 'prim' : prim_generate}
 
 class LabCmd(Cmd):
     '''Class representing interactive labyrinth shell'''
@@ -39,14 +40,14 @@ class LabCmd(Cmd):
         try:
             if splitted_args[3] in generate.keys():
                 begin = datetime.now()
-                self.curr_labyrinth = generate[splitted_args[3]](int(x_bound), int(y_bound), ((randint(0, int(x_bound) - 1)), 0))
+                self.curr_labyrinth = generate[splitted_args[3]](int(x_bound), int(y_bound))
                 end = datetime.now()
 
                 print('Labyrinth generated in:', '{:.3f}'.format((end - begin).microseconds / 1000), 'ms')
             else:
                 print('*** Incorrect args set')
-        except Exception as exception:
-            print(f'*** Internal exception: {exception.with_traceback()}')
+        except Exception:
+            print(f'*** Internal exception: {traceback.format_exc()}')
     
         self.curr_name = splitted_args[2]
 
@@ -60,7 +61,7 @@ class LabCmd(Cmd):
                                       solved,
                                       self.curr_labyrinth.width,
                                       self.curr_labyrinth.height,
-                                      self.curr_labyrinth.initial_cell,
+                                      self.curr_labyrinth.start_cell,
                                       self.curr_labyrinth.finish_cell))  
 
             print('Labyrinth solved in:', '{:.3f}'.format((end - begin).microseconds / 1000), 'ms')
