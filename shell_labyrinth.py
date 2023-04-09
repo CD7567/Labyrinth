@@ -1,28 +1,32 @@
+'''This module provides shell functionality'''
+
 import os
 import re
 import traceback
 from datetime import datetime
 from cmd import Cmd
 
-from utils.generator import Labyrinth
-from utils.generator import dfs_generate
-from utils.generator import wilson_generate
-from utils.generator import prim_generate
-from utils.generator import solve_labyrinth
-from utils.generator import save_csv
-from utils.generator import load_csv
-from utils.console_visualizer import print_labyrinth
+from src.entities import Labyrinth
+from src.generator import dfs_generate
+from src.generator import wilson_generate
+from src.generator import prim_generate
+from src.generator import solve_labyrinth
+from src.loader import save_csv
+from src.loader import load_csv
+from src.printer import print_labyrinth
 
 generate = {'dfs' : dfs_generate, 'wilson' : wilson_generate, 'prim' : prim_generate}
 
 class LabCmd(Cmd):
-    '''Class representing interactive labyrinth shell'''
+    '''This class represents interactive labyrinth shell'''
     prompt = "> "
 
     curr_labyrinth: Labyrinth = None
     curr_name: str = None
 
     def do_generate(self, args):
+        '''This method provides generate command'''
+
         splitted_args = re.split(r'\s+', args)
 
         try:
@@ -31,12 +35,12 @@ class LabCmd(Cmd):
             elif len(splitted_args) < 3:
                 print('*** Incorrect args set')
                 return False
-            
+
             x_bound, y_bound= int(splitted_args[0]), int(splitted_args[1])
         except ValueError:
             print('*** Incorrect args set')
             return False
-        
+
         try:
             if splitted_args[3] in generate.keys():
                 begin = datetime.now()
@@ -48,11 +52,13 @@ class LabCmd(Cmd):
                 print('*** Incorrect args set')
         except Exception:
             print(f'*** Internal exception: {traceback.format_exc()}')
-    
+
         self.curr_name = splitted_args[2]
 
     def do_solve(self, _):
-        if self.curr_name != None:
+        '''This method provides solve command'''
+
+        if self.curr_name is not None:
             begin = datetime.now()
             solved = solve_labyrinth(self.curr_labyrinth)
             end = datetime.now()
@@ -70,27 +76,31 @@ class LabCmd(Cmd):
             return False
 
     def do_save(self, args):
+        '''This method provides save command'''
+
         splitted_args = re.split(r'\s+', args)
 
         if len(splitted_args) == 0:
-            name = splitted_args[0]
-        else:
             name = self.curr_name
+        else:
+            name = splitted_args[0]
 
-        if self.curr_labyrinth == None:
+        if self.curr_labyrinth is None:
             print('*** No labyrinth is focused')
             return False
 
         if os.path.isfile(os.path.join(os.path.dirname(__file__), 'maps', f'{name}.csv')):
             print(f'Save named {name} already exists, overwrite? [y/n]')
-            
+
             if input() != 'y':
                 return False
 
         save_csv(self.curr_labyrinth, os.path.join(os.path.dirname(__file__), 'maps'), name)
-        print(f'Labyrinth \'{self.curr_name}\' successfully saved')
+        print(f'Labyrinth \'{name}\' successfully saved')
 
     def do_load(self, args):
+        '''This method provides solve command'''
+
         splitted_args = re.split(r'\s+', args)
         name = splitted_args[0]
 
@@ -102,18 +112,24 @@ class LabCmd(Cmd):
             print(f'*** Labyrinth \'{name}\' does not exist')
 
     def do_focus(self, _):
-        if self.curr_name == None:
+        '''This method provides focus command'''
+
+        if self.curr_name is None:
             print('*** No labyrinth is focused')
         else:
             print(self.curr_name)
 
     def do_show(self, _):
-        if self.curr_labyrinth == None:
+        '''This method provides show command'''
+
+        if self.curr_labyrinth is None:
             print('*** No labyrinth is focused')
         else:
             print_labyrinth(self.curr_labyrinth)
 
     def do_list(self, _):
+        '''This method provides list command'''
+
         saves = []
 
         for file in os.listdir(os.path.join(os.path.dirname(__file__), 'maps')):
@@ -122,6 +138,8 @@ class LabCmd(Cmd):
         print('Existing saves:', *saves, sep = '\n* ')
 
     def do_exit(self, _):
+        '''This method provides exit command'''
+
         return True
 
 lab_cmd = LabCmd()

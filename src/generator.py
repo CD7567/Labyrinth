@@ -1,38 +1,15 @@
-import os
-import copy
-from csv import writer
-from csv import reader
-from dataclasses import dataclass
+'''This module contains generating and solving algorithms'''
+
 from collections import deque
-from random import sample
 from random import randint
-from typing import TypeAlias
+from random import sample
+from copy import deepcopy
 
-@dataclass
-class Cell:
-    '''Class representing cell of labyrinth'''
-    top: int = 1
-    bottom: int = 1
-    left: int = 1
-    right: int = 1
-    visited: int = 0
-    type: int = 0
+from .entities import Coords
+from .entities import Field
+from .entities import Cell
+from .entities import Labyrinth
 
-    def __str__(self):
-        return f'{self.top}{self.bottom}{self.left}{self.right}{self.type}'
-
-Coords: TypeAlias = tuple[int, int]
-Field: TypeAlias = list[list[Cell]]
-
-@dataclass
-class Labyrinth:
-    '''Class representing labyrinth'''
-    algo: str
-    field: Field
-    width: int
-    height: int
-    start_cell: Coords
-    finish_cell: Coords
 
 def dfs_generate(width: int, height: int) -> Labyrinth:
     '''Takes field dimensions and generates labyrinth via DFS'''
@@ -57,11 +34,11 @@ def dfs_generate(width: int, height: int) -> Labyrinth:
         return result
 
     field = [
-                [
-                    Cell() for i in range(height)
-                ] for j in range(width)
-            ]
-    
+        [
+            Cell() for _ in range(height)
+        ] for _ in range(width)
+    ]
+
     initial_cell = (randint(0, width - 1), 0)
 
     dead_ends = []
@@ -110,6 +87,7 @@ def dfs_generate(width: int, height: int) -> Labyrinth:
 
     return Labyrinth('dfs', field, width, height, initial_cell, finish_cell)
 
+
 def wilson_generate(width: int, height: int) -> Labyrinth:
     '''Takes field dimensions and generates labyrinth via Wilson's algorithm'''
 
@@ -133,10 +111,10 @@ def wilson_generate(width: int, height: int) -> Labyrinth:
         return result
 
     field = [
-                [
-                    Cell() for i in range(height)
-                ] for j in range(width)
-            ]
+        [
+            Cell() for _ in range(height)
+        ] for _ in range(width)
+    ]
 
     initial_cell = (randint(0, width - 1), 0)
 
@@ -144,7 +122,7 @@ def wilson_generate(width: int, height: int) -> Labyrinth:
     field[initial_cell[0]][initial_cell[1]].type = 1
     field[initial_cell[0]][initial_cell[1]].top = 0
 
-    unvisited_set = set([(i, j) for i in range(width) for j in range(height)])
+    unvisited_set = {(i, j) for i in range(width) for j in range(height)}
     unvisited_set.remove(initial_cell)
 
     dead_ends = []
@@ -171,7 +149,7 @@ def wilson_generate(width: int, height: int) -> Labyrinth:
 
             if field[next_cell[0]][next_cell[1]].visited == 1:
                 break
-        
+
         if path[-1] in dead_ends:
             dead_ends.remove(path[-1])
 
@@ -196,9 +174,11 @@ def wilson_generate(width: int, height: int) -> Labyrinth:
 
     finish_cell = sample(dead_ends, 1)[0]
     field[finish_cell[0]][finish_cell[1]].type = 2
+
     return Labyrinth('wilson', field, width, height, initial_cell, finish_cell)
 
-def prim_generate(width: int , height: int) -> Labyrinth:
+
+def prim_generate(width: int, height: int) -> Labyrinth:
     '''
         Takes field dimensions and generates labyrinth via Prim's algorithm
         Edge weights are calculated by random height map
@@ -224,13 +204,14 @@ def prim_generate(width: int , height: int) -> Labyrinth:
         return result
 
     field = [
-                [
-                    Cell() for j in range(height)
-                ] for i in range(width)
-            ]
+        [
+            Cell() for j in range(height)
+        ] for i in range(width)
+    ]
 
     max_weight = width * height
-    height_map = [[randint(1, max_weight) for j in range(height)] for i in range (width)]
+    height_map = [[randint(1, max_weight)
+                   for j in range(height)] for i in range(width)]
 
     initial_cell = (randint(1, width - 1), randint(0, height - 1))
     field[initial_cell[0]][initial_cell[1]].visited = 1
@@ -239,7 +220,10 @@ def prim_generate(width: int , height: int) -> Labyrinth:
     dead_ends = []
 
     for vertex in get_valid_neighbours(field, initial_cell):
-        possible_paths.append((abs(height_map[vertex[0]][vertex[1]] - height_map[initial_cell[0]][initial_cell[1]]), initial_cell, vertex))
+        possible_paths.append(
+            (abs(height_map[vertex[0]][vertex[1]] - height_map[initial_cell[0]][initial_cell[1]]),
+             initial_cell,
+             vertex))
 
     while len(possible_paths) > 0:
         path = min(possible_paths)
@@ -248,7 +232,6 @@ def prim_generate(width: int , height: int) -> Labyrinth:
 
         field[next_cell[0]][next_cell[1]].visited = 1
         neighbours = get_valid_neighbours(field, next_cell)
-
 
         if curr_cell[0] < next_cell[0]:
             field[curr_cell[0]][curr_cell[1]].right = 0
@@ -263,14 +246,17 @@ def prim_generate(width: int , height: int) -> Labyrinth:
             field[curr_cell[0]][curr_cell[1]].top = 0
             field[next_cell[0]][next_cell[1]].bottom = 0
 
-
         for vertex in neighbours:
-            possible_paths.append((abs(height_map[vertex[0]][vertex[1]] - height_map[next_cell[0]][next_cell[1]]), next_cell, vertex))
+            possible_paths.append(
+                (abs(height_map[vertex[0]][vertex[1]] - height_map[next_cell[0]][next_cell[1]]),
+                 next_cell,
+                 vertex))
 
         if len(neighbours) == 0:
             dead_ends.append(next_cell)
 
-        possible_paths = [path for path in possible_paths if field[path[2][0]][path[2][1]].visited == 0]
+        possible_paths = [
+            path for path in possible_paths if field[path[2][0]][path[2][1]].visited == 0]
 
     start_cell = (randint(0, width - 1), 0)
 
@@ -284,6 +270,7 @@ def prim_generate(width: int , height: int) -> Labyrinth:
     field[finish_cell[0]][finish_cell[1]].type = 2
 
     return Labyrinth('prim', field, width, height, start_cell, finish_cell)
+
 
 def solve_labyrinth(labyrinth: Labyrinth) -> Field:
     '''Takes labyrinth and solves it via DFS'''
@@ -307,7 +294,7 @@ def solve_labyrinth(labyrinth: Labyrinth) -> Field:
 
         return result
 
-    field = copy.deepcopy(labyrinth.field)
+    field = deepcopy(labyrinth.field)
     start_cell = labyrinth.start_cell
 
     for i in range(len(field)):
@@ -333,7 +320,7 @@ def solve_labyrinth(labyrinth: Labyrinth) -> Field:
 
             field[next_cell[0]][next_cell[1]].visited = 1
 
-            if (next_cell == labyrinth.finish_cell):
+            if next_cell == labyrinth.finish_cell:
                 break
 
             path.append(next_cell)
@@ -342,37 +329,3 @@ def solve_labyrinth(labyrinth: Labyrinth) -> Field:
         field[cell[0]][cell[1]].type = -1
 
     return field
-    
-def save_csv(labyrinth: Labyrinth, save_path: str, name: str):
-    '''Saves labyrinth in csv file'''
-    os.makedirs(save_path, exist_ok = True)
-    with open(os.path.join(save_path, f'{name}.csv'), 'w', encoding = 'utf-8') as file:
-        file_writer = writer(file)
-        file_writer.writerow([labyrinth.width, labyrinth.height])
-        file_writer.writerow(labyrinth.start_cell)
-        file_writer.writerow(labyrinth.finish_cell)
-        file_writer.writerow(labyrinth.algo)
-
-
-        for row in zip(*labyrinth.field):
-            file_writer.writerow(row)
-
-def load_csv(load_path: str, name: str) -> Labyrinth:
-    '''Loads labyrinth from csv file'''
-
-    def join_str(string: list[chr]) -> str:
-        result = ''
-
-        for i in string:
-            result += i
-
-        return result
-
-    with open(os.path.join(load_path, f'{name}.csv'), 'r', encoding = 'utf-8') as file:
-        file_reader = list(reader(file))
-        labyrinth = Labyrinth(join_str(file_reader[3]), [], int(file_reader[0][0]), int(file_reader[0][1]), (int(file_reader[1][0]), int(file_reader[1][1])), (int(file_reader[2][0]), int(file_reader[2][1])))
-
-        for column in zip(*file_reader[4:]):
-            labyrinth.field.append([Cell(int(i[0]), int(i[1]), int(i[2]), int(i[3]), 0, int(i[4])) for i in column])
-
-        return labyrinth

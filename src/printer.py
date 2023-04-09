@@ -1,4 +1,6 @@
-from .generator import Labyrinth
+'''This module contains printing algorithm'''
+
+from .entities import Labyrinth
 
 cell_filler = {-1: '*', 0 : ' ', 1 : ' ', 2 : '¤'}
 cell_cross_delimiter = {'110011' : '╔', '110001': '║',
@@ -11,6 +13,8 @@ cell_cross_delimiter = {'110011' : '╔', '110001': '║',
                         '001100' : '╝', '001101' : '╣', '001110' : '╩', '001111' : '╬'}
 
 def print_labyrinth(labyrinth: Labyrinth):
+    '''Takes labyrinth and prints it into shell'''
+
     print(f'Labyrinth size: {labyrinth.width}x{labyrinth.height}')
     print(f'Start cell: {labyrinth.start_cell}')
     print(f'Finish cell: {labyrinth.finish_cell}')
@@ -21,30 +25,42 @@ def print_labyrinth(labyrinth: Labyrinth):
     print(' ')
 
     for i in range(labyrinth.height):
-        if (i == 0):
+        if i == 0:
             for j in range(labyrinth.width):
-                if (j == 0):
-                    print(cell_cross_delimiter['1100' + str(labyrinth.field[j][i].top) + str(labyrinth.field[j][i].left)],
+                if j == 0:
+                    print(cell_cross_delimiter['1100'
+                                               + str(labyrinth.field[j][i].top)
+                                               + str(labyrinth.field[j][i].left)],
                           '═' if labyrinth.field[j][i].top else ' ',
                           sep = '', end = '')
                 else:
-                    print(cell_cross_delimiter['10' + str(labyrinth.field[j - 1][i].top) + '0' + str(labyrinth.field[j][i].top) + str(labyrinth.field[j][i].left)],
+                    print(cell_cross_delimiter['10'
+                                               + str(labyrinth.field[j - 1][i].top)
+                                               + '0' + str(labyrinth.field[j][i].top)
+                                               + str(labyrinth.field[j][i].left)],
                           '═' if labyrinth.field[j][i].top else ' ',
                           sep = '', end = '')
-                    
+
             print('╗' if labyrinth.field[-1][i].top else '║')
 
         else:
             for j in range(labyrinth.width):
-                if (j == 0):
-                    print(cell_cross_delimiter['010' + str(labyrinth.field[j][i - 1].left) + str(labyrinth.field[j][i].top) + str(labyrinth.field[j][i].left)],
+                if j == 0:
+                    print(cell_cross_delimiter['010'
+                                               + str(labyrinth.field[j][i - 1].left)
+                                               + str(labyrinth.field[j][i].top)
+                                               + str(labyrinth.field[j][i].left)],
                           '═' if labyrinth.field[j][i].top else ' ',
                           sep = '', end = '')
                 else:
-                    print(cell_cross_delimiter['00' + str(labyrinth.field[j - 1][i].top) + str(labyrinth.field[j][i - 1].left) + str(labyrinth.field[j][i].top) + str(labyrinth.field[j][i].left)],
+                    print(cell_cross_delimiter['00'
+                                               + str(labyrinth.field[j - 1][i].top)
+                                               + str(labyrinth.field[j][i - 1].left)
+                                               + str(labyrinth.field[j][i].top)
+                                               + str(labyrinth.field[j][i].left)],
                           '═' if labyrinth.field[j][i].top else ' ',
                           sep = '', end = '')
-                    
+
             print('╣' if labyrinth.field[-1][i].top else '║')
 
         for j in range(labyrinth.width):
