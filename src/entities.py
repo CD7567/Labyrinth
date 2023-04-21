@@ -1,4 +1,4 @@
-'''This module contains entities used in labyrinth'''
+"""This module contains entities used in labyrinth"""
 
 from dataclasses import dataclass
 from typing import TypeAlias
@@ -6,7 +6,7 @@ from typing import TypeAlias
 
 @dataclass
 class Cell:
-    '''This class represents cell of labyrinth'''
+    """This class represents cell of labyrinth"""
     top: int = 1
     bottom: int = 1
     left: int = 1
@@ -24,7 +24,7 @@ Field: TypeAlias = list[list[Cell]]
 
 @dataclass
 class Labyrinth:
-    '''This class represents labyrinth'''
+    """This class represents labyrinth"""
     algo: str
     field: Field
     width: int
