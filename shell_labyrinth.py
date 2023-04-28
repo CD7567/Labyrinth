@@ -2,6 +2,7 @@
 
 import os
 import re
+from termcolor import COLORS
 from datetime import datetime
 from cmd import Cmd
 
@@ -22,9 +23,16 @@ class LabCmd(Cmd):
 
     curr_labyrinth: Labyrinth = None
     curr_name: str = None
+    conf: dict = None
+    style: dict = None
     solver = Solver()
-    loader = Loader(os.path.join(os.path.dirname(__file__), 'maps'))
-    printer = Printer()
+    lab_loader = Loader(os.path.join(os.path.dirname(__file__), 'maps'))
+
+    def __init__(self):
+        self.conf = Loader(os.path.join(os.path.dirname(__file__), 'conf')).load_json('conf')
+        self.style = Loader(os.path.join(os.path.dirname(__file__), 'conf')).load_json('styles')
+
+        super().__init__()
 
     def do_generate(self, args):
         """This method provides generate command"""
@@ -65,12 +73,14 @@ class LabCmd(Cmd):
             solved = self.solver.solve(self.curr_labyrinth)
             end = datetime.now()
 
-            self.printer.print_labyrinth(Labyrinth(self.curr_labyrinth.algo,
-                                                   solved,
-                                                   self.curr_labyrinth.width,
-                                                   self.curr_labyrinth.height,
-                                                   self.curr_labyrinth.start_cell,
-                                                   self.curr_labyrinth.finish_cell))
+            Printer(Labyrinth(self.curr_labyrinth.algo,
+                              solved,
+                              self.curr_labyrinth.width,
+                              self.curr_labyrinth.height,
+                              self.curr_labyrinth.start_cell,
+                              self.curr_labyrinth.finish_cell),
+                    self.conf, self.style
+                    ).print_labyrinth()
 
             print('Labyrinth solved in:', '{:.3f}'.format((end - begin).microseconds / 1000), 'ms')
         else:
@@ -97,7 +107,7 @@ class LabCmd(Cmd):
             if input() != 'y':
                 return False
 
-        self.loader.save_csv(self.curr_labyrinth, name)
+        self.lab_loader.save_labyrinth_csv(self.curr_labyrinth, name)
         print(f'Labyrinth \'{name}\' successfully saved')
 
     def do_load(self, args):
@@ -107,7 +117,7 @@ class LabCmd(Cmd):
         name = split_args[0]
 
         if os.path.isfile(os.path.join(os.path.dirname(__file__), 'maps', f'{name}.csv')):
-            self.curr_labyrinth = self.loader.load_csv(name)
+            self.curr_labyrinth = self.lab_loader.load_labyrinth_csv(name)
             self.curr_name = name
             print(f'Labyrinth \'{self.curr_name}\' successfully loaded')
         else:
@@ -127,7 +137,7 @@ class LabCmd(Cmd):
         if self.curr_labyrinth is None:
             print('*** No labyrinth is focused')
         else:
-            self.printer.print_labyrinth(self.curr_labyrinth)
+            Printer(self.curr_labyrinth, self.conf, self.style).print_labyrinth()
 
     def do_list(self, _):
         """This method provides list command"""
@@ -139,8 +149,53 @@ class LabCmd(Cmd):
 
         print('Existing saves:', *saves, sep='\n* ')
 
+    def do_configure(self, _):
+        """This method provides configure command"""
+        first_iter = 1
+
+        while first_iter or input('\nContinue configurating? [y/n] ') == 'y':
+            first_iter = 0
+            print('Configurable properties:', *self.conf.keys(), sep='\n * ', end='\n\n')
+            prop = input('Enter property name: ').upper()
+
+            if prop in self.conf.keys():
+                match prop:
+                    case 'BORDER_STYLE':
+                        print('Available styles:', *self.style['border'].keys(), sep='\n * ', end='\n\n')
+                        val = input('Enter desired value: ')
+
+                        if val in self.style['border'].keys():
+                            self.conf[prop] = val
+                        else:
+                            print('No such style was found')
+
+                    case 'PATH_STYLE':
+                        print('Available styles:', *self.style['border'].keys(), sep='\n * ', end='\n\n')
+                        val = input('Enter desired value: ')
+
+                        if val in self.style['path'].keys():
+                            self.conf[prop] = val
+                        else:
+                            print('No such style was found')
+
+                    case 'BORDER_COLOR' | 'PATH_COLOR' | 'ENTRY_COLOR' | 'FINISH_COLOR':
+                        print('Available colors:', *COLORS.keys(), sep='\n * ', end='\n\n')
+                        val = input('Enter desired value: ')
+
+                        if val in COLORS.keys():
+                            self.conf[prop] = val
+                        else:
+                            print('No such color was found')
+
+            else:
+                print('Incorrect property name')
+
     def do_exit(self, _):
         """This method provides exit command"""
+        last_conf = Loader(os.path.join(os.path.dirname(__file__), 'conf')).load_json('conf')
+
+        if self.conf != last_conf and input('Save your current configuration? [y/n] ') == 'y':
+            Loader(os.path.join(os.path.dirname(__file__), 'conf')).save_json('conf', self.conf)
 
         return True
 

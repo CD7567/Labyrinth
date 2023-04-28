@@ -12,7 +12,7 @@ class Cell:
     left: int = 1
     right: int = 1
     visited: int = 0
-    type: int = 0
+    type: str = '0'
 
     def __str__(self):
         return f'{self.top}{self.bottom}{self.left}{self.right}{self.type}'
