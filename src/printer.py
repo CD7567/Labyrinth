@@ -1,78 +1,96 @@
 """This module contains printing algorithm"""
 
+import simple_colors
+from termcolor import colored
 from .entities import Labyrinth
+from .conf.styles import border_styles
+from .conf.styles import path_styles
+from .conf.conf import BORDER_STYLE
+from .conf.conf import PATH_STYLE
+from .conf.conf import ENTRY
+from .conf.conf import FINISH
+from .conf.conf import BORDER_COLOR
+from .conf.conf import PATH_COLOR
+from .conf.conf import ENTRY_COLOR
+from .conf.conf import FINISH_COLOR
 
 
 class Printer:
-    __cell_filler = {-1: '*', 0: ' ', 1: ' ', 2: '¤'}
-    __cell_cross_delimiter = {'110011': '╔', '110001': '║',
-                              '100010': '═', '101000': '═', '100011': '╔', '101001': '╗',
-                              '101010': '═', '101011': '╦',
-                              '010101': '║', '010111': '╠',
-                              '000001': '║', '000010': '═', '000011': '╔', '000100': '║',
-                              '000101': '║', '000110': '╚', '000111': '╠',
-                              '001000': '═', '001001': '╗', '001010': '═', '001011': '╦',
-                              '001100': '╝', '001101': '╣', '001110': '╩', '001111': '╬'}
+    def __init__(self, labyrinth: Labyrinth):
+        self.__labyrinth = labyrinth
 
-    def print_labyrinth(self, labyrinth: Labyrinth) -> None:
+        self.__border = border_styles[BORDER_STYLE]
+
+        for k, v in self.__border.items():
+            self.__border[k] = colored(v, BORDER_COLOR)
+
+        self.__path = path_styles[PATH_STYLE]
+
+        for k, v in self.__path.items():
+            self.__path[k] = colored(v, PATH_COLOR)
+
+        self.__path.update({0: ' ', 1: ' ', 2: colored(FINISH, FINISH_COLOR), 3: colored(ENTRY, ENTRY_COLOR)})
+
+    def print_labyrinth(self) -> None:
         """Takes labyrinth and prints it into shell"""
 
-        print(f'Labyrinth size: {labyrinth.width}x{labyrinth.height}')
-        print(f'Start cell: {labyrinth.start_cell}')
-        print(f'Finish cell: {labyrinth.finish_cell}')
-        print(f'Algo: {labyrinth.algo}', '\n')
+        print(f'Labyrinth size: {self.__labyrinth.width}x{self.__labyrinth.height}')
+        print(f'Start cell: {self.__labyrinth.start_cell}')
+        print(f'Finish cell: {self.__labyrinth.finish_cell}')
+        print(f'Algo: {self.__labyrinth.algo}', '\n')
 
-        for j in range(labyrinth.width):
-            print(' ', '↓' if (j, 0) == labyrinth.start_cell else ' ', sep='', end='')
+        for j in range(self.__labyrinth.width):
+            print(' ', self.__path[3] if (j, 0) == self.__labyrinth.start_cell else ' ', sep='', end='')
         print(' ')
 
-        for i in range(labyrinth.height):
+        for i in range(self.__labyrinth.height):
             if i == 0:
-                for j in range(labyrinth.width):
+                for j in range(self.__labyrinth.width):
                     if j == 0:
-                        print(self.__cell_cross_delimiter['1100'
-                                                          + str(labyrinth.field[j][i].top)
-                                                          + str(labyrinth.field[j][i].left)],
-                              '═' if labyrinth.field[j][i].top else ' ',
+                        print(self.__border['1100'
+                                            + str(self.__labyrinth.field[j][i].top)
+                                            + str(self.__labyrinth.field[j][i].left)],
+                              self.__border['101010'] if self.__labyrinth.field[j][i].top else ' ',
                               sep='', end='')
                     else:
-                        print(self.__cell_cross_delimiter['10'
-                                                          + str(labyrinth.field[j - 1][i].top)
-                                                          + '0' + str(labyrinth.field[j][i].top)
-                                                          + str(labyrinth.field[j][i].left)],
-                              '═' if labyrinth.field[j][i].top else ' ',
+                        print(self.__border['10'
+                                            + str(self.__labyrinth.field[j - 1][i].top)
+                                            + '0' + str(self.__labyrinth.field[j][i].top)
+                                            + str(self.__labyrinth.field[j][i].left)],
+                              self.__border['101010'] if self.__labyrinth.field[j][i].top else ' ',
                               sep='', end='')
 
-                print('╗' if labyrinth.field[-1][i].top else '║')
+                print(self.__border['001001'] if self.__labyrinth.field[-1][i].top else self.__border['010101'])
 
             else:
-                for j in range(labyrinth.width):
+                for j in range(self.__labyrinth.width):
                     if j == 0:
-                        print(self.__cell_cross_delimiter['010'
-                                                          + str(labyrinth.field[j][i - 1].left)
-                                                          + str(labyrinth.field[j][i].top)
-                                                          + str(labyrinth.field[j][i].left)],
-                              '═' if labyrinth.field[j][i].top else ' ',
+                        print(self.__border['010'
+                                            + str(self.__labyrinth.field[j][i - 1].left)
+                                            + str(self.__labyrinth.field[j][i].top)
+                                            + str(self.__labyrinth.field[j][i].left)],
+                              self.__border['101010'] if self.__labyrinth.field[j][i].top else ' ',
                               sep='', end='')
                     else:
-                        print(self.__cell_cross_delimiter['00'
-                                                          + str(labyrinth.field[j - 1][i].top)
-                                                          + str(labyrinth.field[j][i - 1].left)
-                                                          + str(labyrinth.field[j][i].top)
-                                                          + str(labyrinth.field[j][i].left)],
-                              '═' if labyrinth.field[j][i].top else ' ',
+                        print(self.__border['00'
+                                            + str(self.__labyrinth.field[j - 1][i].top)
+                                            + str(self.__labyrinth.field[j][i - 1].left)
+                                            + str(self.__labyrinth.field[j][i].top)
+                                            + str(self.__labyrinth.field[j][i].left)],
+                              self.__border['101010'] if self.__labyrinth.field[j][i].top else ' ',
                               sep='', end='')
 
-                print('╣' if labyrinth.field[-1][i].top else '║')
+                print(self.__border['001101'] if self.__labyrinth.field[-1][i].top else self.__border['010101'])
 
-            for j in range(labyrinth.width):
-                print('║' if labyrinth.field[j][i].left else ' ',
-                      self.__cell_filler[labyrinth.field[j][i].type],
+            for j in range(self.__labyrinth.width):
+                print(self.__border['010101'] if self.__labyrinth.field[j][i].left else ' ',
+                      simple_colors.green(self.__path[self.__labyrinth.field[j][i].type]),
                       sep='', end='')
-            print('║')
+            print(self.__border['010101'])
 
-        for j in range(labyrinth.width):
-            print('╚' if j == 0 else ('╩' if labyrinth.field[j][-1].left else '═'),
-                  '═',
+        for j in range(self.__labyrinth.width):
+            print(self.__border['000110'] if j == 0 else (
+                      self.__border['001110'] if self.__labyrinth.field[j][-1].left else self.__border['101010']),
+                  self.__border['101010'],
                   sep='', end='')
-        print('╝')
+        print(self.__border['001100'])

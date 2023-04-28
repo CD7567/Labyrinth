@@ -24,7 +24,6 @@ class LabCmd(Cmd):
     curr_name: str = None
     solver = Solver()
     loader = Loader(os.path.join(os.path.dirname(__file__), 'maps'))
-    printer = Printer()
 
     def do_generate(self, args):
         """This method provides generate command"""
@@ -65,12 +64,13 @@ class LabCmd(Cmd):
             solved = self.solver.solve(self.curr_labyrinth)
             end = datetime.now()
 
-            self.printer.print_labyrinth(Labyrinth(self.curr_labyrinth.algo,
-                                                   solved,
-                                                   self.curr_labyrinth.width,
-                                                   self.curr_labyrinth.height,
-                                                   self.curr_labyrinth.start_cell,
-                                                   self.curr_labyrinth.finish_cell))
+            Printer(Labyrinth(self.curr_labyrinth.algo,
+                              solved,
+                              self.curr_labyrinth.width,
+                              self.curr_labyrinth.height,
+                              self.curr_labyrinth.start_cell,
+                              self.curr_labyrinth.finish_cell)
+                    ).print_labyrinth()
 
             print('Labyrinth solved in:', '{:.3f}'.format((end - begin).microseconds / 1000), 'ms')
         else:
@@ -127,7 +127,7 @@ class LabCmd(Cmd):
         if self.curr_labyrinth is None:
             print('*** No labyrinth is focused')
         else:
-            self.printer.print_labyrinth(self.curr_labyrinth)
+            Printer(self.curr_labyrinth).print_labyrinth()
 
     def do_list(self, _):
         """This method provides list command"""

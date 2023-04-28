@@ -76,27 +76,34 @@ class DFSGenerator(Generator):
 
     def generate(self) -> Labyrinth:
         """Generate Labyrinth via DFS algorithm"""
+
+        """Creating field"""
         field = [
             [
                 Cell() for _ in range(self._height)
             ] for _ in range(self._width)
         ]
 
+        """Choosing initial cell"""
         initial_cell = (randint(0, self.width - 1), 0)
 
+        """Initializing required additional data"""
         dead_ends = []
         path = deque()
         met_end = 0
 
+        """Embedding initial cell"""
         path.append(initial_cell)
         field[initial_cell[0]][initial_cell[1]].visited = 1
         field[initial_cell[0]][initial_cell[1]].type = 1
         field[initial_cell[0]][initial_cell[1]].top = 0
 
+        """DFS loop"""
         while True:
             curr_cell = path[-1]
             neighbours = self.__get_valid_neighbours(field, curr_cell)
 
+            """Checking neighbours and embedding next cell"""
             if len(neighbours) == 0:
                 if curr_cell != initial_cell:
                     if not met_end:
@@ -125,6 +132,7 @@ class DFSGenerator(Generator):
                 field[next_cell[0]][next_cell[1]].visited = 1
                 path.append(next_cell)
 
+        """Picking finish cell"""
         finish_cell = sample(dead_ends, 1)[0]
         field[finish_cell[0]][finish_cell[1]].type = 2
 
@@ -321,6 +329,16 @@ class PrimGenerator(Generator):
 class Solver:
     """Class solving Labyrinth via DFS"""
 
+    __cell_codes = {'02': -1, '20': -1,
+                    '13': -2, '31': -2,
+                    '12': -3, '21': -3,
+                    '23': -4, '32': -4,
+                    '01': -5, '10': -5,
+                    '03': -6, '30': -6}
+
+    def __init__(self):
+        pass
+
     def __get_valid_neighbours(self, field: Field, coords: Coords) -> list[Coords]:
         """Takes field and one of its cells, returns valid neighbours"""
         x_bound, y_bound = len(field), len(field[0])
@@ -329,28 +347,47 @@ class Solver:
         if coords[1] > 0 \
                 and not field[coords[0]][coords[1] - 1].visited \
                 and not field[coords[0]][coords[1]].top:
-
             result.append((coords[0], coords[1] - 1))
 
         if coords[1] < y_bound - 1 \
                 and not field[coords[0]][coords[1] + 1].visited \
                 and not field[coords[0]][coords[1]].bottom:
-
             result.append((coords[0], coords[1] + 1))
 
         if coords[0] > 0 \
                 and not field[coords[0] - 1][coords[1]].visited \
                 and not field[coords[0]][coords[1]].left:
-
             result.append((coords[0] - 1, coords[1]))
 
         if coords[0] < x_bound - 1 \
                 and not field[coords[0] + 1][coords[1]].visited \
                 and not field[coords[0]][coords[1]].right:
-
             result.append((coords[0] + 1, coords[1]))
 
         return result
+
+    def __get_relation(self, prev: Coords, curr: Coords, next: Coords) -> str:
+        relation = ''
+
+        if prev[0] < curr[0]:
+            relation += '3'
+        elif prev[0] > curr[0]:
+            relation += '1'
+        elif prev[1] < curr[1]:
+            relation += '2'
+        else:
+            relation += '0'
+
+        if next[0] < curr[0]:
+            relation += '3'
+        elif next[0] > curr[0]:
+            relation += '1'
+        elif next[1] < curr[1]:
+            relation += '2'
+        else:
+            relation += '0'
+
+        return relation
 
     def solve(self, labyrinth: Labyrinth) -> Field:
         """Solve Labyrinth via DFS"""
@@ -380,12 +417,15 @@ class Solver:
 
                 field[next_cell[0]][next_cell[1]].visited = 1
 
+                path.append(next_cell)
+
                 if next_cell == labyrinth.finish_cell:
                     break
 
-                path.append(next_cell)
+        field[path[0][0]][path[0][1]].type = self.__cell_codes[
+            self.__get_relation((path[0][0], path[0][1] - 1), path[0], path[1])]
 
-        for cell in path:
-            field[cell[0]][cell[1]].type = -1
+        for i in range(1, len(path) - 1):
+            field[path[i][0]][path[i][1]].type = self.__cell_codes[self.__get_relation(path[i - 1], path[i], path[i + 1])]
 
         return field
