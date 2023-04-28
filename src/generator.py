@@ -95,7 +95,7 @@ class DFSGenerator(Generator):
         """Embedding initial cell"""
         path.append(initial_cell)
         field[initial_cell[0]][initial_cell[1]].visited = 1
-        field[initial_cell[0]][initial_cell[1]].type = 1
+        field[initial_cell[0]][initial_cell[1]].type = '1'
         field[initial_cell[0]][initial_cell[1]].top = 0
 
         """DFS loop"""
@@ -134,7 +134,7 @@ class DFSGenerator(Generator):
 
         """Picking finish cell"""
         finish_cell = sample(dead_ends, 1)[0]
-        field[finish_cell[0]][finish_cell[1]].type = 2
+        field[finish_cell[0]][finish_cell[1]].type = '2'
 
         return Labyrinth('dfs', field, self._width, self._height, initial_cell, finish_cell)
 
@@ -172,7 +172,7 @@ class WilsonGenerator(Generator):
         initial_cell = (randint(0, self._width - 1), 0)
 
         field[initial_cell[0]][initial_cell[1]].visited = 1
-        field[initial_cell[0]][initial_cell[1]].type = 1
+        field[initial_cell[0]][initial_cell[1]].type = '1'
         field[initial_cell[0]][initial_cell[1]].top = 0
 
         unvisited_set = {(i, j) for i in range(self._width) for j in range(self._height)}
@@ -225,7 +225,7 @@ class WilsonGenerator(Generator):
                     field[next_cell[0]][next_cell[1]].bottom = 0
 
         finish_cell = sample(dead_ends, 1)[0]
-        field[finish_cell[0]][finish_cell[1]].type = 2
+        field[finish_cell[0]][finish_cell[1]].type = '2'
 
         return Labyrinth('wilson', field, self._width, self._height, initial_cell, finish_cell)
 
@@ -315,13 +315,13 @@ class PrimGenerator(Generator):
         start_cell = (randint(0, self._width - 1), 0)
 
         field[start_cell[0]][start_cell[1]].top = 0
-        field[start_cell[0]][start_cell[1]].type = 1
+        field[start_cell[0]][start_cell[1]].type = '1'
 
         if start_cell in dead_ends:
             dead_ends.remove(start_cell)
 
         finish_cell = sample(dead_ends, 1)[0]
-        field[finish_cell[0]][finish_cell[1]].type = 2
+        field[finish_cell[0]][finish_cell[1]].type = '2'
 
         return Labyrinth('prim', field, self._width, self._height, start_cell, finish_cell)
 
@@ -329,12 +329,12 @@ class PrimGenerator(Generator):
 class Solver:
     """Class solving Labyrinth via DFS"""
 
-    __cell_codes = {'02': -1, '20': -1,
-                    '13': -2, '31': -2,
-                    '12': -3, '21': -3,
-                    '23': -4, '32': -4,
-                    '01': -5, '10': -5,
-                    '03': -6, '30': -6}
+    __cell_codes = {'02': '-1', '20': '-1',
+                    '13': '-2', '31': '-2',
+                    '12': '-3', '21': '-3',
+                    '23': '-4', '32': '-4',
+                    '01': '-5', '10': '-5',
+                    '03': '-6', '30': '-6'}
 
     def __init__(self):
         pass
@@ -366,23 +366,23 @@ class Solver:
 
         return result
 
-    def __get_relation(self, prev: Coords, curr: Coords, next: Coords) -> str:
+    def __get_relation(self, prev_cell: Coords, curr_cell: Coords, next_cell: Coords) -> str:
         relation = ''
 
-        if prev[0] < curr[0]:
+        if prev_cell[0] < curr_cell[0]:
             relation += '3'
-        elif prev[0] > curr[0]:
+        elif prev_cell[0] > curr_cell[0]:
             relation += '1'
-        elif prev[1] < curr[1]:
+        elif prev_cell[1] < curr_cell[1]:
             relation += '2'
         else:
             relation += '0'
 
-        if next[0] < curr[0]:
+        if next_cell[0] < curr_cell[0]:
             relation += '3'
-        elif next[0] > curr[0]:
+        elif next_cell[0] > curr_cell[0]:
             relation += '1'
-        elif next[1] < curr[1]:
+        elif next_cell[1] < curr_cell[1]:
             relation += '2'
         else:
             relation += '0'

@@ -1,35 +1,29 @@
 """This module contains printing algorithm"""
 
-import simple_colors
 from termcolor import colored
 from .entities import Labyrinth
-from .conf.styles import border_styles
-from .conf.styles import path_styles
-from .conf.conf import BORDER_STYLE
-from .conf.conf import PATH_STYLE
-from .conf.conf import ENTRY
-from .conf.conf import FINISH
-from .conf.conf import BORDER_COLOR
-from .conf.conf import PATH_COLOR
-from .conf.conf import ENTRY_COLOR
-from .conf.conf import FINISH_COLOR
+from copy import deepcopy
 
 
 class Printer:
-    def __init__(self, labyrinth: Labyrinth):
+    def __init__(self, labyrinth: Labyrinth, conf: dict, styles: dict):
+        print(conf)
         self.__labyrinth = labyrinth
 
-        self.__border = border_styles[BORDER_STYLE]
+        self.__border = deepcopy(styles['border'][conf['BORDER_STYLE']])
+        self.__path = deepcopy(styles['path'][conf['PATH_STYLE']])
+
+        print(styles)
 
         for k, v in self.__border.items():
-            self.__border[k] = colored(v, BORDER_COLOR)
-
-        self.__path = path_styles[PATH_STYLE]
+            self.__border[k] = colored(v, conf['BORDER_COLOR'])
 
         for k, v in self.__path.items():
-            self.__path[k] = colored(v, PATH_COLOR)
+            self.__path[k] = colored(v, conf['PATH_COLOR'])
 
-        self.__path.update({0: ' ', 1: ' ', 2: colored(FINISH, FINISH_COLOR), 3: colored(ENTRY, ENTRY_COLOR)})
+        self.__path.update({'0': ' ', '1': ' ',
+                            '2': colored(conf['FINISH'], conf['FINISH_COLOR']),
+                            '3': colored(conf['ENTRY'], conf['ENTRY_COLOR'])})
 
     def print_labyrinth(self) -> None:
         """Takes labyrinth and prints it into shell"""
@@ -40,7 +34,7 @@ class Printer:
         print(f'Algo: {self.__labyrinth.algo}', '\n')
 
         for j in range(self.__labyrinth.width):
-            print(' ', self.__path[3] if (j, 0) == self.__labyrinth.start_cell else ' ', sep='', end='')
+            print(' ', self.__path['3'] if (j, 0) == self.__labyrinth.start_cell else ' ', sep='', end='')
         print(' ')
 
         for i in range(self.__labyrinth.height):
@@ -84,13 +78,13 @@ class Printer:
 
             for j in range(self.__labyrinth.width):
                 print(self.__border['010101'] if self.__labyrinth.field[j][i].left else ' ',
-                      simple_colors.green(self.__path[self.__labyrinth.field[j][i].type]),
+                      self.__path[self.__labyrinth.field[j][i].type],
                       sep='', end='')
             print(self.__border['010101'])
 
         for j in range(self.__labyrinth.width):
             print(self.__border['000110'] if j == 0 else (
-                      self.__border['001110'] if self.__labyrinth.field[j][-1].left else self.__border['101010']),
+                self.__border['001110'] if self.__labyrinth.field[j][-1].left else self.__border['101010']),
                   self.__border['101010'],
                   sep='', end='')
         print(self.__border['001100'])
