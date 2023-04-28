@@ -1,67 +1,76 @@
+"""This module provides shell functionality"""
+
 import os
 import re
 from datetime import datetime
-from random import randint
 from cmd import Cmd
 
-from utils.generator import Labyrinth
-from utils.generator import dfs_generate
-from utils.generator import wilson_generate
-from utils.generator import solve_labyrinth
-from utils.generator import save_csv
-from utils.generator import load_csv
-from utils.console_visualizer import print_labyrinth
+from src.entities import Labyrinth
+from src.generator import DFSGenerator
+from src.generator import WilsonGenerator
+from src.generator import PrimGenerator
+from src.generator import Solver
+from src.loader import Loader
+from src.printer import Printer
 
-generate = {'dfs' : dfs_generate, 'wilson' : wilson_generate}
+generate = {'dfs': DFSGenerator, 'wilson': WilsonGenerator, 'prim': PrimGenerator}
+
 
 class LabCmd(Cmd):
-    '''Class representing interactive labyrinth shell'''
-    prompt = "> "
+    """This class represents interactive labyrinth shell"""
+    prompt = '> '
 
     curr_labyrinth: Labyrinth = None
     curr_name: str = None
+    solver = Solver()
+    loader = Loader(os.path.join(os.path.dirname(__file__), 'maps'))
+    printer = Printer()
 
     def do_generate(self, args):
-        splitted_args = re.split(r'\s+', args)
+        """This method provides generate command"""
+
+        split_args = re.split(r'\s+', args)
 
         try:
-            if len(splitted_args) == 3:
-                splitted_args.append('dfs')
-            elif len(splitted_args) < 3:
+            if len(split_args) == 3:
+                split_args.append('dfs')
+            elif len(split_args) < 3:
                 print('*** Incorrect args set')
                 return False
-            
-            x_bound, y_bound= int(splitted_args[0]), int(splitted_args[1])
+
+            x_bound, y_bound = int(split_args[0]), int(split_args[1])
         except ValueError:
             print('*** Incorrect args set')
             return False
-        
+
         try:
-            if splitted_args[3] in generate.keys():
+            if split_args[3] in generate.keys():
                 begin = datetime.now()
-                self.curr_labyrinth = generate[splitted_args[3]](int(x_bound), int(y_bound), ((randint(0, int(x_bound) - 1)), 0))
+                self.curr_labyrinth = generate[split_args[3]](int(x_bound), int(y_bound)).generate()
                 end = datetime.now()
 
                 print('Labyrinth generated in:', '{:.3f}'.format((end - begin).microseconds / 1000), 'ms')
             else:
-                print('*** Incorrect args set')
-        except Exception as exception:
-            print(f'*** Internal exception: {exception.with_traceback()}')
-    
-        self.curr_name = splitted_args[2]
+                print('*** Incorrect args set: No such generation algorithm')
+        except ValueError as err:
+            print(f'*** Incorrect args set: {err}')
+
+        self.curr_name = split_args[2]
 
     def do_solve(self, _):
-        if self.curr_name != None:
+        """This method provides solve command"""
+
+        if self.curr_name is not None:
             begin = datetime.now()
-            solved = solve_labyrinth(self.curr_labyrinth)
+            solved = self.solver.solve(self.curr_labyrinth)
             end = datetime.now()
 
-            print_labyrinth(Labyrinth(self.curr_labyrinth.algo,
-                                      solved,
-                                      self.curr_labyrinth.width,
-                                      self.curr_labyrinth.height,
-                                      self.curr_labyrinth.initial_cell,
-                                      self.curr_labyrinth.finish_cell))  
+            self.printer.print_labyrinth(Labyrinth(self.curr_labyrinth.algo,
+                                                   solved,
+                                                   self.curr_labyrinth.width,
+                                                   self.curr_labyrinth.height,
+                                                   self.curr_labyrinth.start_cell,
+                                                   self.curr_labyrinth.finish_cell))
 
             print('Labyrinth solved in:', '{:.3f}'.format((end - begin).microseconds / 1000), 'ms')
         else:
@@ -69,59 +78,72 @@ class LabCmd(Cmd):
             return False
 
     def do_save(self, args):
-        splitted_args = re.split(r'\s+', args)
+        """This method provides save command"""
 
-        if len(splitted_args) == 0:
-            name = splitted_args[0]
-        else:
+        split_args = re.split(r'\s+', args)
+
+        if len(split_args) == 0:
             name = self.curr_name
+        else:
+            name = split_args[0]
 
-        if self.curr_labyrinth == None:
+        if self.curr_labyrinth is None:
             print('*** No labyrinth is focused')
             return False
 
         if os.path.isfile(os.path.join(os.path.dirname(__file__), 'maps', f'{name}.csv')):
             print(f'Save named {name} already exists, overwrite? [y/n]')
-            
+
             if input() != 'y':
                 return False
 
-        save_csv(self.curr_labyrinth, os.path.join(os.path.dirname(__file__), 'maps'), name)
-        print(f'Labyrinth \'{self.curr_name}\' successfully saved')
+        self.loader.save_csv(self.curr_labyrinth, name)
+        print(f'Labyrinth \'{name}\' successfully saved')
 
     def do_load(self, args):
-        splitted_args = re.split(r'\s+', args)
-        name = splitted_args[0]
+        """This method provides solve command"""
+
+        split_args = re.split(r'\s+', args)
+        name = split_args[0]
 
         if os.path.isfile(os.path.join(os.path.dirname(__file__), 'maps', f'{name}.csv')):
-            self.curr_labyrinth = load_csv(os.path.join(os.path.dirname(__file__), 'maps'), name)
+            self.curr_labyrinth = self.loader.load_csv(name)
             self.curr_name = name
             print(f'Labyrinth \'{self.curr_name}\' successfully loaded')
         else:
             print(f'*** Labyrinth \'{name}\' does not exist')
 
     def do_focus(self, _):
-        if self.curr_name == None:
+        """This method provides focus command"""
+
+        if self.curr_name is None:
             print('*** No labyrinth is focused')
         else:
             print(self.curr_name)
 
     def do_show(self, _):
-        if self.curr_labyrinth == None:
+        """This method provides show command"""
+
+        if self.curr_labyrinth is None:
             print('*** No labyrinth is focused')
         else:
-            print_labyrinth(self.curr_labyrinth)
+            self.printer.print_labyrinth(self.curr_labyrinth)
 
     def do_list(self, _):
+        """This method provides list command"""
+
         saves = []
 
         for file in os.listdir(os.path.join(os.path.dirname(__file__), 'maps')):
             saves.append(file.split('.')[0])
 
-        print('Existing saves:', *saves, sep = '\n* ')
+        print('Existing saves:', *saves, sep='\n* ')
 
     def do_exit(self, _):
+        """This method provides exit command"""
+
         return True
+
 
 lab_cmd = LabCmd()
 lab_cmd.cmdloop('Welcome to shell labyrinth generator!')
