@@ -2,6 +2,7 @@
 
 import os
 import re
+import json
 from termcolor import COLORS
 from datetime import datetime
 from cmd import Cmd
@@ -149,52 +150,61 @@ class LabCmd(Cmd):
 
         print('Existing saves:', *saves, sep='\n* ')
 
-    def do_configure(self, _):
+    def do_configure(self, args):
         """This method provides configure command"""
-        first_iter = 1
+        args = args.split()
 
-        while first_iter or input('\nContinue configurating? [y/n] ') == 'y':
-            first_iter = 0
-            print('Configurable properties:', *self.conf.keys(), sep='\n * ', end='\n\n')
-            prop = input('Enter property name: ').upper()
-
-            if prop in self.conf.keys():
-                match prop:
-                    case 'BORDER_STYLE':
-                        print('Available styles:', *self.style['border'].keys(), sep='\n * ', end='\n\n')
-                        val = input('Enter desired value: ')
-
-                        if val in self.style['border'].keys():
-                            self.conf[prop] = val
-                        else:
-                            print('No such style was found')
-
-                    case 'PATH_STYLE':
-                        print('Available styles:', *self.style['border'].keys(), sep='\n * ', end='\n\n')
-                        val = input('Enter desired value: ')
-
-                        if val in self.style['path'].keys():
-                            self.conf[prop] = val
-                        else:
-                            print('No such style was found')
-
-                    case 'BORDER_COLOR' | 'PATH_COLOR' | 'ENTRY_COLOR' | 'FINISH_COLOR':
-                        print('Available colors:', *COLORS.keys(), sep='\n * ', end='\n\n')
-                        val = input('Enter desired value: ')
-
-                        if val in COLORS.keys():
-                            self.conf[prop] = val
-                        else:
-                            print('No such color was found')
-
+        if args and args[0] == '--show':
+            if args[0]:
+                print(json.dumps(self.conf, sort_keys=True, indent=4, separators=(',', ': ')))
             else:
-                print('Incorrect property name')
+                print(f'No such flag was found: {args}')
+        else:
+            first_iter = 1
+
+            while first_iter or input('\nContinue configurating? [y/n] ') == 'y':
+                first_iter = 0
+                print('Configurable properties:', *self.conf.keys(), sep='\n * ', end='\n\n')
+                prop = input('Enter property name: ').upper()
+
+                if prop in self.conf.keys():
+                    match prop:
+                        case 'BORDER_STYLE':
+                            print('Available styles:', *self.style['border'].keys(), sep='\n * ', end='\n\n')
+                            val = input('Enter desired value: ')
+
+                            if val in self.style['border'].keys():
+                                self.conf[prop] = val
+                            else:
+                                print('No such style was found')
+
+                        case 'PATH_STYLE':
+                            print('Available styles:', *self.style['border'].keys(), sep='\n * ', end='\n\n')
+                            val = input('Enter desired value: ')
+
+                            if val in self.style['path'].keys():
+                                self.conf[prop] = val
+                            else:
+                                print('No such style was found')
+
+                        case 'BORDER_COLOR' | 'PATH_COLOR' | 'ENTRY_COLOR' | 'FINISH_COLOR':
+                            print('Available colors:', *COLORS.keys(), sep='\n * ', end='\n\n')
+                            val = input('Enter desired value: ')
+
+                            if val in COLORS.keys():
+                                self.conf[prop] = val
+                            else:
+                                print('No such color was found')
+
+                else:
+                    print('Incorrect property name')
 
     def do_exit(self, _):
         """This method provides exit command"""
         last_conf = Loader(os.path.join(os.path.dirname(__file__), 'conf')).load_json('conf')
 
-        if self.conf != last_conf and input('Save your current configuration? [y/n] ') == 'y':
+        if ((set(last_conf.items()) - set(self.conf.items())) or (set(self.conf.items()) - set(last_conf.items())))\
+                and input('Save your current configuration? [y/n] ') == 'y':
             Loader(os.path.join(os.path.dirname(__file__), 'conf')).save_json('conf', self.conf)
 
         return True

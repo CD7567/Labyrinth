@@ -10,6 +10,7 @@ from .entities import Labyrinth
 
 
 class Loader:
+    """Class for loading and saving app files"""
     def __init__(self, save_path: str) -> None:
         self.__path = save_path
 
@@ -53,9 +54,11 @@ class Loader:
             return labyrinth
 
     def load_json(self, name: str) -> dict:
+        """Loads json conf files"""
         with open(os.path.join(self.__path, f'{name}.json'), 'r', encoding='utf-8') as json_file:
             return json.load(json_file)
 
     def save_json(self, name: str, json_data: dict) -> None:
+        """Saves json conf files"""
         with open(os.path.join(self.__path, f'{name}.json'), 'w', encoding='utf-8') as json_file:
-            json.dump(json_data, json_file)
+            json.dump(json_data, json_file, sort_keys=True, indent=4, separators=(',', ': '))

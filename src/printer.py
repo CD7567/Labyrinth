@@ -6,14 +6,12 @@ from copy import deepcopy
 
 
 class Printer:
+    """Class for printing labyrinths in console"""
     def __init__(self, labyrinth: Labyrinth, conf: dict, styles: dict):
-        print(conf)
         self.__labyrinth = labyrinth
 
         self.__border = deepcopy(styles['border'][conf['BORDER_STYLE']])
         self.__path = deepcopy(styles['path'][conf['PATH_STYLE']])
-
-        print(styles)
 
         for k, v in self.__border.items():
             self.__border[k] = colored(v, conf['BORDER_COLOR'])
