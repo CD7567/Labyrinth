@@ -1,0 +1,11 @@
+{
+  "BORDER_STYLE" : "double",
+  "PATH_STYLE" : "single",
+  "ENTRY" : "∇",
+  "FINISH" : "◉",
+
+  "BORDER_COLOR" : "magenta",
+  "PATH_COLOR" : "green",
+  "ENTRY_COLOR" : "green",
+  "FINISH_COLOR" : "light_yellow"
+}
