@@ -1,4 +1,7 @@
 maps
 src/__pycache__
 src/conf/__pycache__
+src/core/__pycache__
+src/game/__pycache__
+src/shell/__pycache__
 .idea
