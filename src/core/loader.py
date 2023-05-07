@@ -5,14 +5,14 @@ import json
 from csv import reader
 from csv import writer
 
-from .entities import Cell
+from .entities import Tile
 from .entities import Labyrinth
 
 
 class Loader:
     """Class for loading and saving app files"""
-    def __init__(self, save_path: str) -> None:
-        self.__path = save_path
+    def __init__(self, path: str) -> None:
+        self.__path = path
 
     @property
     def path(self) -> str:
@@ -29,11 +29,11 @@ class Loader:
         with open(os.path.join(self.__path, f'{name}.csv'), 'w', encoding='utf-8') as file:
             file_writer = writer(file)
             file_writer.writerow([labyrinth.width, labyrinth.height])
-            file_writer.writerow(labyrinth.start_cell)
-            file_writer.writerow(labyrinth.finish_cell)
+            file_writer.writerow(labyrinth.start_tile)
+            file_writer.writerow(labyrinth.finish_tile)
             file_writer.writerow(labyrinth.algo)
 
-            for row in zip(*labyrinth.field):
+            for row in zip(*labyrinth.board):
                 file_writer.writerow(row)
 
     def load_labyrinth_csv(self, name: str) -> Labyrinth:
@@ -47,9 +47,9 @@ class Loader:
                                   (int(file_reader[2][0]), int(file_reader[2][1])))
 
             for column in zip(*file_reader[4:]):
-                labyrinth.field.append([Cell(int(i[0]), int(i[1]),
+                labyrinth.board.append([Tile(int(i[0]), int(i[1]),
                                              int(i[2]), int(i[3]),
-                                             0, i[4]) for i in column])
+                                             i[4]) for i in column])
 
             return labyrinth
 

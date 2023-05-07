@@ -7,13 +7,13 @@ from termcolor import COLORS
 from datetime import datetime
 from cmd import Cmd
 
-from src.entities import Labyrinth
-from src.generator import DFSGenerator
-from src.generator import WilsonGenerator
-from src.generator import PrimGenerator
-from src.generator import Solver
-from src.loader import Loader
-from src.printer import Printer
+from src.core.entities import Labyrinth
+from src.core.generator import DFSGenerator
+from src.core.generator import WilsonGenerator
+from src.core.generator import PrimGenerator
+from src.core.generator import Solver
+from src.core.loader import Loader
+from src.shell.printer import Printer
 
 generate = {'dfs': DFSGenerator, 'wilson': WilsonGenerator, 'prim': PrimGenerator}
 
@@ -78,8 +78,8 @@ class LabCmd(Cmd):
                               solved,
                               self.curr_labyrinth.width,
                               self.curr_labyrinth.height,
-                              self.curr_labyrinth.start_cell,
-                              self.curr_labyrinth.finish_cell),
+                              self.curr_labyrinth.start_tile,
+                              self.curr_labyrinth.finish_tile),
                     self.conf, self.style
                     ).print_labyrinth()
 
