@@ -6,8 +6,8 @@ from random import sample
 from copy import deepcopy
 
 from .entities import Coords
-from .entities import Field
-from .entities import Cell
+from .entities import Board
+from .entities import Tile
 from .entities import Labyrinth
 
 
@@ -55,7 +55,7 @@ class Generator:
 class DFSGenerator(Generator):
     """Class generating Labyrinth instances via DFS algorithm"""
 
-    def __get_valid_neighbours(self, field: Field, coords: Coords) -> list[Coords]:
+    def __get_valid_neighbours(self, field: Board, coords: Coords) -> list[Coords]:
         """Takes field and one of its cells, returns valid non-visited neighbours"""
         x_bound, y_bound = len(field), len(field[0])
         result = []
@@ -80,8 +80,8 @@ class DFSGenerator(Generator):
         """Creating field"""
         field = [
             [
-                Cell() for _ in range(self._height)
-            ] for _ in range(self._width)
+                Tile(x=i, y=j) for j in range(self._height)
+            ] for i in range(self._width)
         ]
 
         """Choosing initial cell"""
@@ -142,7 +142,7 @@ class DFSGenerator(Generator):
 class WilsonGenerator(Generator):
     """Class generating Labyrinth instances via Wilson's algorithm"""
 
-    def __get_valid_neighbours(self, field: Field, coords: Coords) -> list[Coords]:
+    def __get_valid_neighbours(self, field: Board, coords: Coords) -> list[Coords]:
         """Takes field and one of its cells, returns valid neighbours"""
         x_bound, y_bound = len(field), len(field[0])
         result = []
@@ -165,8 +165,8 @@ class WilsonGenerator(Generator):
         """Generate Labyrinth via Wilson's algorithm"""
         field = [
             [
-                Cell() for _ in range(self._height)
-            ] for _ in range(self._width)
+                Tile(x=i, y=j) for j in range(self._height)
+            ] for i in range(self._width)
         ]
 
         initial_cell = (randint(0, self._width - 1), 0)
@@ -236,7 +236,7 @@ class PrimGenerator(Generator):
         Edge weights are calculated by random height map
     """
 
-    def __get_valid_neighbours(self, field: Field, coords: Coords) -> list[Coords]:
+    def __get_valid_neighbours(self, field: Board, coords: Coords) -> list[Coords]:
         """Takes field and one of its cells, returns valid neighbours"""
         x_bound, y_bound = len(field), len(field[0])
         result = []
@@ -259,8 +259,8 @@ class PrimGenerator(Generator):
         """Generate Labyrinth via Prim's algorithm"""
         field = [
             [
-                Cell() for _ in range(self._height)
-            ] for _ in range(self._width)
+                Tile(x=i, y=j) for j in range(self._height)
+            ] for i in range(self._width)
         ]
 
         max_weight = self._width * self._height
@@ -339,7 +339,7 @@ class Solver:
     def __init__(self):
         pass
 
-    def __get_valid_neighbours(self, field: Field, coords: Coords) -> list[Coords]:
+    def __get_valid_neighbours(self, field: Board, coords: Coords) -> list[Coords]:
         """Takes field and one of its cells, returns valid neighbours"""
         x_bound, y_bound = len(field), len(field[0])
         result = []
@@ -389,10 +389,10 @@ class Solver:
 
         return relation
 
-    def solve(self, labyrinth: Labyrinth) -> Field:
+    def solve(self, labyrinth: Labyrinth) -> Board:
         """Solve Labyrinth via DFS"""
-        field = deepcopy(labyrinth.field)
-        start_cell = labyrinth.start_cell
+        field = deepcopy(labyrinth.board)
+        start_cell = labyrinth.start_tile
 
         for i in range(len(field)):
             for j in range(len(field[0])):
@@ -419,13 +419,17 @@ class Solver:
 
                 path.append(next_cell)
 
-                if next_cell == labyrinth.finish_cell:
+                if next_cell == labyrinth.finish_tile:
                     break
 
         field[path[0][0]][path[0][1]].type = self.__cell_codes[
             self.__get_relation((path[0][0], path[0][1] - 1), path[0], path[1])]
 
         for i in range(1, len(path) - 1):
-            field[path[i][0]][path[i][1]].type = self.__cell_codes[self.__get_relation(path[i - 1], path[i], path[i + 1])]
+            field[path[i][0]][path[i][1]].type = self.__cell_codes[
+                self.__get_relation(path[i - 1], path[i], path[i + 1])]
 
         return field
+
+
+generators = {'dfs': DFSGenerator, 'wilson': WilsonGenerator, 'prim': PrimGenerator}
